@@ -1,12 +1,19 @@
 package com.ovah.inventoryservice.model;
 
 import jakarta.persistence.*;
-        import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "vehicles")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Vehicle {
 
     @Id
@@ -31,4 +38,5 @@ public class Vehicle {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VehicleStatus status;
+
 }

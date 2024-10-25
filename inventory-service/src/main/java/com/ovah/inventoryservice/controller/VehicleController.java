@@ -25,6 +25,8 @@ public class VehicleController {
             Vehicle vehicle = vehicleService.getVehicleById(id);
             return ResponseEntity.ok(vehicle);
         } catch (VehicleNotFoundException e) {
+
+
             return ResponseEntity.notFound().build();
         }
     }
