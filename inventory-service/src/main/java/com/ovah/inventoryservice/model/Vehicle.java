@@ -1,5 +1,6 @@
 package com.ovah.inventoryservice.model;
 
+import com.ovah.inventoryservice.model.sync.SyncStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "vehicles")
@@ -18,7 +21,7 @@ public class Vehicle {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String vin;
@@ -38,5 +41,17 @@ public class Vehicle {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VehicleStatus status;
+
+    @Column(name = "autotrader_listing_id")
+    private String autoTraderListingId;
+
+    @Column(name = "last_sync_attempt")
+    private LocalDateTime lastSyncAttempt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private SyncStatus syncStatus = SyncStatus.PROCESSING;
+
 
 }

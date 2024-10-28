@@ -1,2 +1,4 @@
 databaseChangeLog:
-  - 
+  - include:
+      file: changes/26-10-2024-create-vehicle-table.yaml
+      relativeToChangelogFile: true
