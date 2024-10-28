@@ -10,4 +10,8 @@ public class MockAutoTraderService {
         return "AT-111";
     }
 
+    public Boolean updateListing(String id, Vehicle vehicle) {
+        return true;
+    }
+
 }

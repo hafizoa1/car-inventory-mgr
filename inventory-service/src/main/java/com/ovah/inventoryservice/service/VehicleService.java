@@ -6,15 +6,17 @@ import com.ovah.inventoryservice.repository.VehicleRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @AllArgsConstructor
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
 
-    public Vehicle getVehicleById(Long id) {
-        return vehicleRepository.findById(Math.toIntExact(id))
-                .orElseThrow(() -> new VehicleNotFoundException(id));
+    public Vehicle getVehicleById(UUID id) {
+        return vehicleRepository.findById(id)
+                .orElseThrow(() -> new VehicleNotFoundException(String.valueOf(id)));
     }
 
     public void createVehicle(Vehicle vehicle) {

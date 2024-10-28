@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @AllArgsConstructor
@@ -20,7 +21,7 @@ public class VehicleController {
     private VehicleService vehicleService;
 
     @GetMapping("/vehicles/{id}")
-    public ResponseEntity<Vehicle> getVehicle(@PathVariable Long id) {
+    public ResponseEntity<Vehicle> getVehicle(@PathVariable UUID id) {
         try {
             Vehicle vehicle = vehicleService.getVehicleById(id);
             return ResponseEntity.ok(vehicle);
