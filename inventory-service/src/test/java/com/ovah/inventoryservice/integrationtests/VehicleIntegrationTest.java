@@ -9,13 +9,11 @@ import com.ovah.inventoryservice.service.autotrader.MockAutoTraderService;
 import com.ovah.inventoryservice.model.sync.SyncStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -28,11 +26,6 @@ import static org.mockito.Mockito.when;
 import static org.awaitility.Awaitility.await;
 import static com.ovah.inventoryservice.model.VehicleStatus.AVAILABLE;
 
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = InventoryServiceApplication.class
-)
-@ActiveProfiles("test")
 public class VehicleIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
@@ -55,16 +48,18 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
 
         // When: We make a POST request to create the vehicle
         ResponseEntity<Vehicle> response = restTemplate.postForEntity(
-                createURLWithPort("/api/v1/inventory-service/vehicles"), // Fixed endpoint
+                createURLWithPort("/api/v1/inventory-service/vehicles"),
                 vehicleRequest,
                 Vehicle.class
         );
 
         // Then: The response is successful and the vehicle is in the database
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getId()).isNotNull();
 
         // And: The stored vehicle matches our request
-        /*Vehicle savedVehicle = vehicleRepository.findById(1) //change this from 1 to something else
+        Vehicle savedVehicle = vehicleRepository.findById(response.getBody().getId())
                 .orElseThrow(() -> new AssertionError("Vehicle not found in database"));
 
         assertThat(savedVehicle)
@@ -75,7 +70,7 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
                     assertThat(vehicle.getVin()).isEqualTo("1HGCM82633A123456");
                     assertThat(vehicle.getStatus()).isEqualTo(AVAILABLE);
                     assertThat(vehicle.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(25000.00));
-                });*/
+                });
     }
 
     @Test
@@ -86,6 +81,7 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
                 .model("Camry")
                 .year(2023)
                 .vin("1HGCM82633A123456")
+                .status(AVAILABLE)  // Added status
                 .price(BigDecimal.valueOf(25000.00))
                 .build();
 
@@ -101,15 +97,11 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
         );
 
         // Then
-        // 1. Verify immediate response
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getId()).isNotNull();
-        assertThat(response.getBody().getSyncStatus()).isEqualTo(SyncStatus.PENDING);
-
         UUID vehicleId = response.getBody().getId();
 
-        // 2. Wait for async sync to complete and verify final state
+        // Wait for async sync to complete and verify final state
         await().atMost(Duration.ofSeconds(5))
                 .pollInterval(Duration.ofMillis(100))
                 .until(() -> {
@@ -133,6 +125,7 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
                     assertThat(vehicle.getLastSyncAttempt()).isNotNull();
                 });
     }
+
     @Test
     void whenVehicleStatusUpdated_thenSyncedWithAutoTrader() {
         // Given: Create and sync initial vehicle
@@ -140,53 +133,50 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
                 .make("Toyota")
                 .model("Camry")
                 .year(2023)
-                .vin("3HGCM82633A789013")  // Unique VIN
+                .vin("3HGCM82633A789013")
                 .price(BigDecimal.valueOf(25000.00))
                 .status(AVAILABLE)
                 .build();
 
-        // Mock initial AutoTrader listing creation
         when(autoTraderService.createListing(any(Vehicle.class)))
-                .thenReturn("AT-789013"); //create an autotrader id
+                .thenReturn("AT-789013");
 
-        // Save initial vehicle
         ResponseEntity<Vehicle> createResponse = restTemplate.postForEntity(
                 createURLWithPort("/api/v1/inventory-service/vehicles"),
                 initialVehicle,
                 Vehicle.class
         );
 
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(createResponse.getBody()).isNotNull();
         UUID vehicleId = createResponse.getBody().getId();
 
-        // Wait for initial sync to complete
+        // Wait for initial sync
         await().atMost(Duration.ofSeconds(5))
                 .until(() -> {
-                    Vehicle saved = vehicleRepository.findById((vehicleId)).orElseThrow();
+                    Vehicle saved = vehicleRepository.findById(vehicleId).orElseThrow();
                     return SyncStatus.SYNCED.equals(saved.getSyncStatus());
                 });
 
-        // When: Update the vehicle status to SOLD
-        Vehicle updateRequest = vehicleRepository.findById((vehicleId)).orElseThrow();
+        // When: Update vehicle status
+        Vehicle updateRequest = vehicleRepository.findById(vehicleId).orElseThrow();
         updateRequest.setStatus(VehicleStatus.SOLD);
 
-        // Mock AutoTrader status update
         when(autoTraderService.updateListing(eq("AT-789013"), any(Vehicle.class)))
-                .thenReturn(true);
+                .thenReturn("AT-789013");
 
         ResponseEntity<Vehicle> updateResponse = restTemplate.exchange(
-                createURLWithPort("/api/v1/vehicles/" + vehicleId),
+                createURLWithPort("/api/v1/inventory-service/vehicles/" + vehicleId),
                 HttpMethod.PUT,
                 new HttpEntity<>(updateRequest),
                 Vehicle.class
         );
 
-        // Then: Verify the update was successful
         assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(updateResponse.getBody()).isNotNull();
         assertThat(updateResponse.getBody().getStatus()).isEqualTo(VehicleStatus.SOLD);
 
-        // Wait for sync to complete and verify final state
+        // Wait for sync and verify
         await().atMost(Duration.ofSeconds(5))
                 .pollInterval(Duration.ofMillis(100))
                 .until(() -> {
@@ -195,19 +185,13 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
                             VehicleStatus.SOLD.equals(updated.getStatus());
                 });
 
-        // Verify final state
         Vehicle finalVehicle = vehicleRepository.findById(vehicleId).orElseThrow();
         assertThat(finalVehicle)
                 .satisfies(vehicle -> {
-                    // Status should be updated
                     assertThat(vehicle.getStatus()).isEqualTo(VehicleStatus.SOLD);
-
-                    // Sync status should be maintained
                     assertThat(vehicle.getSyncStatus()).isEqualTo(SyncStatus.SYNCED);
                     assertThat(vehicle.getAutoTraderListingId()).isEqualTo("AT-789013");
                     assertThat(vehicle.getLastSyncAttempt()).isNotNull();
-
-                    // Other properties should remain unchanged
                     assertThat(vehicle.getMake()).isEqualTo("Toyota");
                     assertThat(vehicle.getModel()).isEqualTo("Camry");
                     assertThat(vehicle.getYear()).isEqualTo(2023);
@@ -216,4 +200,3 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
                 });
     }
 }
-

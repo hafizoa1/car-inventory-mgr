@@ -1,26 +1,36 @@
 package com.ovah.inventoryservice.base;
 
+import liquibase.Liquibase;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.integration.spring.SpringLiquibase;
+import liquibase.resource.ClassLoaderResourceAccessor;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.sql.Connection;
 import java.time.Duration;
 import java.util.List;
 
@@ -45,6 +55,13 @@ public abstract class BaseIntegrationTest {
     protected EntityManager entityManager;
 
     @Container
+    static RabbitMQContainer rabbitMQ = new RabbitMQContainer(
+            DockerImageName.parse("rabbitmq:3-management")
+    )
+            .withExposedPorts(5672, 15672)
+            .withStartupTimeout(Duration.ofMinutes(2));
+
+    @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
             DockerImageName.parse("postgres:14")
     )
@@ -56,11 +73,13 @@ public abstract class BaseIntegrationTest {
     @BeforeAll
     static void beforeAll() {
         postgres.start();
+        rabbitMQ.start();
     }
 
     @AfterAll
     static void afterAll() {
         postgres.stop();
+        rabbitMQ.stop();
     }
 
     @DynamicPropertySource
@@ -68,40 +87,33 @@ public abstract class BaseIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+
+        registry.add("spring.rabbitmq.host", rabbitMQ::getHost);
+        registry.add("spring.rabbitmq.port", rabbitMQ::getAmqpPort);
+        registry.add("spring.rabbitmq.username", rabbitMQ::getAdminUsername);
+        registry.add("spring.rabbitmq.password", rabbitMQ::getAdminPassword);
     }
 
     @BeforeEach
-    void setUp() {
-        truncateAllTables();
+    void setUp() throws Exception {
+        resetRabbitMQ();
     }
 
     @AfterEach
-    void tearDown() {
-        truncateAllTables();
+    void tearDown() throws Exception {
+        resetRabbitMQ();
     }
 
-    protected void truncateAllTables() {
-        transactionTemplate.execute(status -> {
-            try {
-                entityManager.createNativeQuery("SET CONSTRAINTS ALL DEFERRED").executeUpdate();
-
-                List<String> tableNames = jdbcTemplate.queryForList(
-                        "SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
-                        String.class
-                );
-
-                for (String tableName : tableNames) {
-                    if (!tableName.equals("flyway_schema_history")) {
-                        jdbcTemplate.execute("TRUNCATE TABLE " + tableName + " CASCADE");
-                    }
-                }
-
-                entityManager.createNativeQuery("SET CONSTRAINTS ALL IMMEDIATE").executeUpdate();
-                return null;
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to truncate tables", e);
-            }
-        });
+    private void resetRabbitMQ() {
+        try {
+            rabbitMQ.execInContainer(
+                    "rabbitmqctl", "stop_app",
+                    "rabbitmqctl", "reset",
+                    "rabbitmqctl", "start_app"
+            );
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Failed to reset RabbitMQ", e);
+        }
     }
 
     // Utility methods
@@ -120,5 +132,29 @@ public abstract class BaseIntegrationTest {
     protected void flushAndClear() {
         entityManager.flush();
         entityManager.clear();
+    }
+
+    protected <T> T refreshEntity(T entity) {
+        entityManager.flush();
+        entityManager.clear();
+        return entityManager.find((Class<T>) entity.getClass(),
+                entityManager.getEntityManagerFactory()
+                        .getPersistenceUnitUtil()
+                        .getIdentifier(entity));
+    }
+
+    protected <T> T doInTransaction(TransactionCallback<T> callback) {
+        return transactionTemplate.execute(status -> {
+            try {
+                return callback.execute();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @FunctionalInterface
+    protected interface TransactionCallback<T> {
+        T execute() throws Exception;
     }
 }

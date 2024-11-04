@@ -23,6 +23,18 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    test {
+        resources {
+            srcDirs = ['src/test/resources']  // Use main resources for tests
+        }
+    }
+}
+
+processTestResources {
+    from sourceSets.main.resources  // Copy main resources to test classpath
+}
+
 ext {
     testcontainersVersion = '1.19.7'
 }
@@ -33,7 +45,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-rest'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.liquibase:liquibase-core'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.8' // SpringDoc OpenAPI UI
+    testImplementation 'org.testcontainers:rabbitmq:1.19.7'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
@@ -51,11 +64,17 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 
+    environment("LIQUIBASE_DUPLICATE_FILE_MODE", "WARN")
+
     testLogging {
         events "passed", "skipped", "failed"
         showExceptions true
         exceptionFormat "full"
         showCauses true
         showStackTraces true
+    }
+
+    doFirst {
+        systemProperty 'spring.profiles.active', 'test'
     }
 }
