@@ -19,6 +19,24 @@ import java.util.UUID;
 @Tag(name = "Vehicle Management", description = "Operations pertaining to vehicles in the Inventory Service")
 public class VehicleController {
 
+    /*
+TODO: Future API Improvements
+1. Additional HTTP Status codes:
+   - 400 Bad Request (invalid data formats, validation failures)
+   - 500 Internal Server Error (unexpected server issues)
+   - 409 Conflict (for potential duplicate entries)
+
+2. Input Validation:
+   - @Valid annotations for request bodies
+   - Custom validation constraints
+   - Better error responses
+
+3. Documentation:
+   - More detailed API responses with example payloads
+   - Error response schemas
+   - Better descriptions of expected inputs
+*/
+
     private final VehicleService vehicleService;
 
     @GetMapping("/vehicles/{id}")
@@ -67,4 +85,9 @@ public class VehicleController {
             @PathVariable UUID id) {
         return vehicleService.deleteVehicle(id);
     }
+
+
+
+
+
 }
