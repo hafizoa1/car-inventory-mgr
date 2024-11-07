@@ -2,6 +2,7 @@ package com.ovah.inventoryservice.integrationtests;
 
 import com.ovah.inventoryservice.InventoryServiceApplication;
 import com.ovah.inventoryservice.base.BaseIntegrationTest;
+import com.ovah.inventoryservice.helper.VehicleTestHelper;
 import com.ovah.inventoryservice.model.Vehicle;
 import com.ovah.inventoryservice.model.VehicleStatus;
 import com.ovah.inventoryservice.repository.VehicleRepository;
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.when;
 import static org.awaitility.Awaitility.await;
 import static com.ovah.inventoryservice.model.VehicleStatus.AVAILABLE;
 
-public class VehicleIntegrationTest extends BaseIntegrationTest {
+public class VehicleIntegrationTest extends VehicleTestHelper {
 
     @Autowired
     private VehicleRepository vehicleRepository;
@@ -35,28 +36,17 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
     private MockAutoTraderService autoTraderService;
 
     @Test
-    void whenPostNewVehicle_thenVehicleIsCreatedSuccessfully() {
+    void successfullyCreateVehicle() {
         // Given: A vehicle request
-        Vehicle vehicleRequest = Vehicle.builder()
-                .make("Toyota")
-                .model("Camry")
-                .year(2023)
-                .vin("1HGCM82633A123456")
-                .status(AVAILABLE)
-                .price(BigDecimal.valueOf(25000.00))
-                .build();
+        Vehicle vehicleRequest = givenValidVehicle();
 
         // When: We make a POST request to create the vehicle
-        ResponseEntity<Vehicle> response = restTemplate.postForEntity(
-                createURLWithPort("/api/v1/inventory-service/vehicles"),
-                vehicleRequest,
-                Vehicle.class
-        );
+        ResponseEntity<Vehicle> response = whenPostRequestIsMade(vehicleRequest);
 
         // Then: The response is successful and the vehicle is in the database
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getId()).isNotNull();
+        thenResponseIsOk(response);
+
+        //thenVehicleExistsInDatabase
 
         // And: The stored vehicle matches our request
         Vehicle savedVehicle = vehicleRepository.findById(response.getBody().getId())
@@ -76,30 +66,19 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
     @Test
     void whenVehicleIsCreated_thenItIsSavedLocallyAndSyncedWithAutoTrader() {
         // Given
-        Vehicle vehicleRequest = Vehicle.builder()
-                .make("Toyota")
-                .model("Camry")
-                .year(2023)
-                .vin("1HGCM82633A123456")
-                .status(AVAILABLE)  // Added status
-                .price(BigDecimal.valueOf(25000.00))
-                .build();
+        Vehicle vehicleRequest = givenValidVehicle();
 
         // Mock AutoTrader response
         when(autoTraderService.createListing(any(Vehicle.class)))
                 .thenReturn("AT-123456");
 
         // When
-        ResponseEntity<Vehicle> response = restTemplate.postForEntity(
-                createURLWithPort("/api/v1/inventory-service/vehicles"),
-                vehicleRequest,
-                Vehicle.class
-        );
+        ResponseEntity<Vehicle> response = whenPostRequestIsMade(vehicleRequest);
+
+        UUID vehicleId = response.getBody().getId();
 
         // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        UUID vehicleId = response.getBody().getId();
+        thenResponseIsOk(response);
 
         // Wait for async sync to complete and verify final state
         await().atMost(Duration.ofSeconds(5))
@@ -129,25 +108,14 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
     @Test
     void whenVehicleStatusUpdated_thenSyncedWithAutoTrader() {
         // Given: Create and sync initial vehicle
-        Vehicle initialVehicle = Vehicle.builder()
-                .make("Toyota")
-                .model("Camry")
-                .year(2023)
-                .vin("3HGCM82633A789013")
-                .price(BigDecimal.valueOf(25000.00))
-                .status(AVAILABLE)
-                .build();
+        Vehicle initialVehicle = givenValidVehicle();
 
         when(autoTraderService.createListing(any(Vehicle.class)))
                 .thenReturn("AT-789013");
 
-        ResponseEntity<Vehicle> createResponse = restTemplate.postForEntity(
-                createURLWithPort("/api/v1/inventory-service/vehicles"),
-                initialVehicle,
-                Vehicle.class
-        );
+        ResponseEntity<Vehicle> createResponse = whenPostRequestIsMade(initialVehicle);
 
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(createResponse.getBody()).isNotNull();
         UUID vehicleId = createResponse.getBody().getId();
 
@@ -195,8 +163,9 @@ public class VehicleIntegrationTest extends BaseIntegrationTest {
                     assertThat(vehicle.getMake()).isEqualTo("Toyota");
                     assertThat(vehicle.getModel()).isEqualTo("Camry");
                     assertThat(vehicle.getYear()).isEqualTo(2023);
-                    assertThat(vehicle.getVin()).isEqualTo("3HGCM82633A789013");
+                    assertThat(vehicle.getVin()).isEqualTo("1HGCM82633A123456");
                     assertThat(vehicle.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(25000.00));
                 });
     }
+
 }
