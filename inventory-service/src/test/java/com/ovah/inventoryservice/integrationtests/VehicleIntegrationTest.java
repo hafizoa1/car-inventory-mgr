@@ -26,13 +26,11 @@ import static com.ovah.inventoryservice.model.VehicleStatus.AVAILABLE;
 
 public class VehicleIntegrationTest extends VehicleTestHelper {
 
-    @Autowired
-    private VehicleRepository vehicleRepository;
-
     @MockBean
     private MockAutoTraderService autoTraderService;
 
-        @Nested
+
+    @Nested
         class VehicleCreationTests {
 
             @Test

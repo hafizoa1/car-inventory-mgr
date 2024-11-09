@@ -3,6 +3,8 @@ package com.ovah.inventoryservice.helper;
 import com.ovah.inventoryservice.base.BaseIntegrationTest;
 import com.ovah.inventoryservice.model.Vehicle;
 import com.ovah.inventoryservice.repository.VehicleRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -14,9 +16,15 @@ import static com.ovah.inventoryservice.model.VehicleStatus.AVAILABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-public class VehicleTestHelper extends BaseIntegrationTest {
+public abstract class VehicleTestHelper extends BaseIntegrationTest {
 
-    VehicleRepository vehicleRepository; 
+    @Autowired
+    protected VehicleRepository vehicleRepository;
+
+    @BeforeEach
+    void setUp() {
+        vehicleRepository.deleteAll();
+    }
 
     public Vehicle givenValidVehicle() {
        return Vehicle.builder()
