@@ -1,18 +1,15 @@
 package com.ovah.inventoryservice.integrationtests;
 
-import com.ovah.inventoryservice.InventoryServiceApplication;
-import com.ovah.inventoryservice.base.BaseIntegrationTest;
 import com.ovah.inventoryservice.helper.VehicleTestHelper;
 import com.ovah.inventoryservice.model.Vehicle;
 import com.ovah.inventoryservice.model.VehicleStatus;
 import com.ovah.inventoryservice.repository.VehicleRepository;
 import com.ovah.inventoryservice.service.autotrader.MockAutoTraderService;
 import com.ovah.inventoryservice.model.sync.SyncStatus;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -35,137 +32,184 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
     @MockBean
     private MockAutoTraderService autoTraderService;
 
-    @Test
-    void successfullyCreateVehicle() {
-        // Given: A vehicle request
-        Vehicle vehicleRequest = givenValidVehicle();
+        @Nested
+        class VehicleCreationTests {
 
-        // When: We make a POST request to create the vehicle
-        ResponseEntity<Vehicle> response = whenPostRequestIsMade(vehicleRequest);
+            @Test
+            void successfullyCreateVehicle() {
+                // Given: A vehicle request
+                Vehicle vehicleRequest = givenValidVehicle();
 
-        // Then: The response is successful and the vehicle is in the database
-        thenResponseIsOk(response);
+                // When: We make a POST request to create the vehicle
+                ResponseEntity<Vehicle> response = whenPostRequestIsMade(vehicleRequest);
 
-        //thenVehicleExistsInDatabase
+                // Then: The response is successful and the vehicle is in the database
+                thenResponseIsCreated(response);
 
-        // And: The stored vehicle matches our request
-        Vehicle savedVehicle = vehicleRepository.findById(response.getBody().getId())
-                .orElseThrow(() -> new AssertionError("Vehicle not found in database"));
+                //thenVehicleExistsInDatabase
 
-        assertThat(savedVehicle)
-                .satisfies(vehicle -> {
-                    assertThat(vehicle.getMake()).isEqualTo("Toyota");
-                    assertThat(vehicle.getModel()).isEqualTo("Camry");
-                    assertThat(vehicle.getYear()).isEqualTo(2023);
-                    assertThat(vehicle.getVin()).isEqualTo("1HGCM82633A123456");
-                    assertThat(vehicle.getStatus()).isEqualTo(AVAILABLE);
-                    assertThat(vehicle.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(25000.00));
-                });
-    }
+                // And: The stored vehicle matches our request
+                Vehicle savedVehicle = vehicleRepository.findById(response.getBody().getId())
+                        .orElseThrow(() -> new AssertionError("Vehicle not found in database"));
 
-    @Test
-    void whenVehicleIsCreated_thenItIsSavedLocallyAndSyncedWithAutoTrader() {
-        // Given
-        Vehicle vehicleRequest = givenValidVehicle();
+                assertThat(savedVehicle)
+                        .satisfies(vehicle -> {
+                            assertThat(vehicle.getMake()).isEqualTo("Toyota");
+                            assertThat(vehicle.getModel()).isEqualTo("Camry");
+                            assertThat(vehicle.getYear()).isEqualTo(2023);
+                            assertThat(vehicle.getVin()).isEqualTo("1HGCM82633A123456");
+                            assertThat(vehicle.getStatus()).isEqualTo(AVAILABLE);
+                            assertThat(vehicle.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(25000.00));
+                        });
+            }
 
-        // Mock AutoTrader response
-        when(autoTraderService.createListing(any(Vehicle.class)))
-                .thenReturn("AT-123456");
 
-        // When
-        ResponseEntity<Vehicle> response = whenPostRequestIsMade(vehicleRequest);
+            @Test
+            void shouldSuccessfullyCreateAndSyncVehicle() {
+                // Given
+                Vehicle vehicleRequest = givenValidVehicle();
 
-        UUID vehicleId = response.getBody().getId();
+                when(autoTraderService.createListing(any(Vehicle.class)))
+                        .thenReturn("AT-123456");
 
-        // Then
-        thenResponseIsOk(response);
+                // When
+                ResponseEntity<Vehicle> response = whenPostRequestIsMade(vehicleRequest);
 
-        // Wait for async sync to complete and verify final state
-        await().atMost(Duration.ofSeconds(5))
-                .pollInterval(Duration.ofMillis(100))
-                .until(() -> {
-                    Vehicle savedVehicle = vehicleRepository.findById(vehicleId).orElseThrow();
-                    return SyncStatus.SYNCED.equals(savedVehicle.getSyncStatus());
-                });
+                // Then
+                thenResponseIsCreated(response);
 
-        Vehicle syncedVehicle = vehicleRepository.findById(vehicleId).orElseThrow();
-        assertThat(syncedVehicle)
-                .satisfies(vehicle -> {
-                    // Basic vehicle properties
-                    assertThat(vehicle.getMake()).isEqualTo("Toyota");
-                    assertThat(vehicle.getModel()).isEqualTo("Camry");
-                    assertThat(vehicle.getYear()).isEqualTo(2023);
-                    assertThat(vehicle.getVin()).isEqualTo("1HGCM82633A123456");
-                    assertThat(vehicle.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(25000.00));
+                // Wait for sync and verify
+                await()
+                        .atMost(Duration.ofSeconds(5))
+                        .until(() -> {
+                            Vehicle saved = vehicleRepository.findById(response.getBody().getId()).orElseThrow();
+                            return SyncStatus.SYNCED.equals(saved.getSyncStatus());
+                        });
 
-                    // Sync properties
-                    assertThat(vehicle.getSyncStatus()).isEqualTo(SyncStatus.SYNCED);
-                    assertThat(vehicle.getAutoTraderListingId()).isEqualTo("AT-123456");
-                    assertThat(vehicle.getLastSyncAttempt()).isNotNull();
-                });
-    }
+                Vehicle savedVehicle = vehicleRepository.findById(response.getBody().getId()).orElseThrow();
+                assertThat(savedVehicle)
+                        .satisfies(vehicle -> {
+                            assertThat(vehicle.getMake()).isEqualTo("Toyota");
+                            assertThat(vehicle.getModel()).isEqualTo("Camry");
+                            assertThat(vehicle.getYear()).isEqualTo(2023);
+                            assertThat(vehicle.getVin()).isEqualTo("1HGCM82633A123456");
+                            assertThat(vehicle.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(25000.00));
 
-    @Test
-    void whenVehicleStatusUpdated_thenSyncedWithAutoTrader() {
-        // Given: Create and sync initial vehicle
-        Vehicle initialVehicle = givenValidVehicle();
+                            // Sync properties
+                            assertThat(vehicle.getSyncStatus()).isEqualTo(SyncStatus.SYNCED);
+                            assertThat(vehicle.getAutoTraderListingId()).isEqualTo("AT-123456");
+                            assertThat(vehicle.getLastSyncAttempt()).isNotNull();
+                        });
+            }
 
-        when(autoTraderService.createListing(any(Vehicle.class)))
-                .thenReturn("AT-789013");
+            /*@Test
+            void unsuccessfulCreationWithMissingFields() {
 
-        ResponseEntity<Vehicle> createResponse = whenPostRequestIsMade(initialVehicle);
+            }*/
 
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(createResponse.getBody()).isNotNull();
-        UUID vehicleId = createResponse.getBody().getId();
+            /*@Test
+            void duplicateVinNumber() { // probably rename these tests
 
-        // Wait for initial sync
-        await().atMost(Duration.ofSeconds(5))
-                .until(() -> {
-                    Vehicle saved = vehicleRepository.findById(vehicleId).orElseThrow();
-                    return SyncStatus.SYNCED.equals(saved.getSyncStatus());
-                });
+            }*/
 
-        // When: Update vehicle status
-        Vehicle updateRequest = vehicleRepository.findById(vehicleId).orElseThrow();
-        updateRequest.setStatus(VehicleStatus.SOLD);
+            /*@Test
+            void InvalidDataTypeInField() { //should fail for bad vin number
 
-        when(autoTraderService.updateListing(eq("AT-789013"), any(Vehicle.class)))
-                .thenReturn("AT-789013");
+            }*/
 
-        ResponseEntity<Vehicle> updateResponse = restTemplate.exchange(
-                createURLWithPort("/api/v1/inventory-service/vehicles/" + vehicleId),
-                HttpMethod.PUT,
-                new HttpEntity<>(updateRequest),
-                Vehicle.class
-        );
+        }
 
-        assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(updateResponse.getBody()).isNotNull();
-        assertThat(updateResponse.getBody().getStatus()).isEqualTo(VehicleStatus.SOLD);
+        @Nested
+        class VehicleUpdateTests {
+            @Test
+            void shouldSuccessfullyUpdateAndSyncVehicle() {
+                // Given
+                Vehicle existingVehicle = givenExistingVehicle();
+                existingVehicle.setPrice(BigDecimal.valueOf(26000.00));
+                existingVehicle.setStatus(VehicleStatus.SOLD);
 
-        // Wait for sync and verify
-        await().atMost(Duration.ofSeconds(5))
-                .pollInterval(Duration.ofMillis(100))
-                .until(() -> {
-                    Vehicle updated = vehicleRepository.findById(vehicleId).orElseThrow();
-                    return SyncStatus.SYNCED.equals(updated.getSyncStatus()) &&
-                            VehicleStatus.SOLD.equals(updated.getStatus());
-                });
+                when(autoTraderService.updateListing(eq(existingVehicle.getAutoTraderListingId()), any(Vehicle.class)))
+                        .thenReturn(existingVehicle.getAutoTraderListingId());
 
-        Vehicle finalVehicle = vehicleRepository.findById(vehicleId).orElseThrow();
-        assertThat(finalVehicle)
-                .satisfies(vehicle -> {
-                    assertThat(vehicle.getStatus()).isEqualTo(VehicleStatus.SOLD);
-                    assertThat(vehicle.getSyncStatus()).isEqualTo(SyncStatus.SYNCED);
-                    assertThat(vehicle.getAutoTraderListingId()).isEqualTo("AT-789013");
-                    assertThat(vehicle.getLastSyncAttempt()).isNotNull();
-                    assertThat(vehicle.getMake()).isEqualTo("Toyota");
-                    assertThat(vehicle.getModel()).isEqualTo("Camry");
-                    assertThat(vehicle.getYear()).isEqualTo(2023);
-                    assertThat(vehicle.getVin()).isEqualTo("1HGCM82633A123456");
-                    assertThat(vehicle.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(25000.00));
-                });
-    }
+                // When
+                ResponseEntity<Vehicle> response = whenPutRequestIsMade(existingVehicle, existingVehicle.getId());
+
+                // Then
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+                // Wait for sync and verify
+                await()
+                        .atMost(Duration.ofSeconds(5))
+                        .until(() -> {
+                            Vehicle updated = vehicleRepository.findById(existingVehicle.getId()).orElseThrow();
+                            return SyncStatus.SYNCED.equals(updated.getSyncStatus());
+                        });
+
+                Vehicle updatedVehicle = vehicleRepository.findById(existingVehicle.getId()).orElseThrow();
+                assertThat(updatedVehicle)
+                        .satisfies(vehicle -> {
+                            assertThat(vehicle.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(26000.00));
+                            assertThat(vehicle.getStatus()).isEqualTo(VehicleStatus.SOLD);
+                            assertThat(vehicle.getSyncStatus()).isEqualTo(SyncStatus.SYNCED);
+                        });
+            }
+
+            /*@Test
+            void unsucessfullyUpdateUnchangeableFields() {
+
+            }*/
+        }
+
+        @Nested
+        class VehicleRetrievalTests {
+            @Test
+            void successfullyRetrieveVehicle() {
+                // Given
+                Vehicle existingVehicle = givenExistingVehicle();
+
+                // When
+                ResponseEntity<Vehicle> response = whenGetRequestIsMade(existingVehicle.getId());
+
+                // Then
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                assertThat(response.getBody())
+                        .isNotNull()
+                        .satisfies(vehicle -> {
+                            assertThat(vehicle.getId()).isEqualTo(existingVehicle.getId());
+                            assertThat(vehicle.getVin()).isEqualTo(existingVehicle.getVin());
+                        });
+            }
+
+            @Test
+            void unsuccessfullyRetrieveVehicle() {
+                // When
+
+                ResponseEntity<Vehicle> response = whenGetRequestIsMade(UUID.randomUUID());
+
+                // Then
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            }
+        }
+
+        @Nested
+        class VehicleDeletionTests {
+            @Test
+            void successfullyDeleteAndSyncVehicle() {
+                // Given
+                Vehicle existingVehicle = givenExistingVehicle();
+
+                when(autoTraderService.deleteListing(existingVehicle.getAutoTraderListingId()))
+                        .thenReturn(true);
+
+                // When
+                ResponseEntity<Void> response = whenDeleteRequestIsMade(existingVehicle.getId());
+
+                // Then
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+                assertThat(vehicleRepository.findById(existingVehicle.getId())).isEmpty();
+            }
+        }
+
 
 }
+

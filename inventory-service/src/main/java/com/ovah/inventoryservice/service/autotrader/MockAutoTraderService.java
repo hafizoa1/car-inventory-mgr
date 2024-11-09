@@ -16,4 +16,7 @@ public class MockAutoTraderService {
         return "AT-111";
     }
 
+    public boolean deleteListing(String autoTraderListingId) {
+        return true;
+    }
 }
