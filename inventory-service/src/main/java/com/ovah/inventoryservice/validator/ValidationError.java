@@ -14,6 +14,7 @@ public class ValidationError <T>{
     public enum ErrorCode {
         INVALID_FORMAT,
         REQUIRED_FIELD,
-        OUT_OF_RANGE, BUSINESS_RULE_VIOLATION,
+        OUT_OF_RANGE,
+        BUSINESS_RULE_VIOLATION,
     }
 }

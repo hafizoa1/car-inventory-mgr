@@ -3,12 +3,10 @@ package com.ovah.inventoryservice.integrationtests;
 import com.ovah.inventoryservice.helper.VehicleTestHelper;
 import com.ovah.inventoryservice.model.Vehicle;
 import com.ovah.inventoryservice.model.VehicleStatus;
-import com.ovah.inventoryservice.repository.VehicleRepository;
 import com.ovah.inventoryservice.service.autotrader.MockAutoTraderService;
 import com.ovah.inventoryservice.model.sync.SyncStatus;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +21,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.awaitility.Awaitility.await;
 import static com.ovah.inventoryservice.model.VehicleStatus.AVAILABLE;
+
 
 public class VehicleIntegrationTest extends VehicleTestHelper {
 
@@ -100,10 +99,18 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
                         });
             }
 
-            /*@Test
+            @Test
             void unsuccessfulCreationWithMissingFields() {
+                Vehicle invalidVehicle = givenInvalidVehicle();
 
-            }*/
+                ResponseEntity<String> response = whenBadPostRequestIsMade(invalidVehicle);
+                //log.info("Response Status: {}", response.getStatusCode());
+                //log.info("Response Body: {}", response.getBody());
+
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+            }
 
             /*@Test
             void duplicateVinNumber() { // probably rename these tests
@@ -207,7 +214,6 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
                 assertThat(vehicleRepository.findById(existingVehicle.getId())).isEmpty();
             }
         }
-
 
 }
 

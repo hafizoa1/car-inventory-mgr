@@ -22,7 +22,7 @@ public class Vehicle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @Column(name = "id",unique=true, nullable = false)
+    @Column(name = "id", unique=true, nullable = false)
     private UUID id;
 
     @Column(unique = true, nullable = false)
@@ -54,6 +54,4 @@ public class Vehicle {
     @Column(nullable = false)
     @Builder.Default
     private SyncStatus syncStatus = SyncStatus.PROCESSING;
-
-
 }

@@ -2,6 +2,8 @@ package com.ovah.inventoryservice.helper;
 
 import com.ovah.inventoryservice.base.BaseIntegrationTest;
 import com.ovah.inventoryservice.model.Vehicle;
+import com.ovah.inventoryservice.model.VehicleStatus;
+import com.ovah.inventoryservice.model.sync.SyncStatus;
 import com.ovah.inventoryservice.repository.VehicleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,32 @@ public abstract class VehicleTestHelper extends BaseIntegrationTest {
         vehicleRepository.deleteAll();
     }
 
+    protected Vehicle givenInvalidVehicle() {
+        return Vehicle.builder()
+                // Missing required fields (nullable = false)
+                .make(null)
+                .model("")   // Empty string
+                .vin(null)   // Missing unique identifier
+                .year(-1)    // Invalid year
+                .price(BigDecimal.valueOf(-100.00))  // Negative price
+                // Missing required status
+                .syncStatus(null)  // Invalid sync status
+                .build();
+    }
+
+    // Or a variant with invalid formats
+    protected Vehicle givenVehicleWithInvalidFormats() {
+        return Vehicle.builder()
+                .make("Toyota@123")  // Special characters
+                .model("   ")        // Only whitespace
+                .vin("123")         // Too short VIN
+                .year(2025)         // Future year
+                .price(BigDecimal.valueOf(0.00))  // Zero price
+                .status(VehicleStatus.AVAILABLE)
+                .syncStatus(SyncStatus.PROCESSING)
+                .build();
+    }
+
     public Vehicle givenValidVehicle() {
        return Vehicle.builder()
                 .make("Toyota")
@@ -37,14 +65,6 @@ public abstract class VehicleTestHelper extends BaseIntegrationTest {
                 .build();
     }
 
-    public Vehicle givenInvalidVehicle() { //remove field that is meant to be there like make and or model
-        return Vehicle.builder()
-                .make("feuyh")
-                .model("yfu")
-                .year(2007)
-                .vin("te")
-                .build();
-    }
 
     protected Vehicle givenExistingVehicle() {
         Vehicle vehicle = givenValidVehicle();
@@ -56,6 +76,13 @@ public abstract class VehicleTestHelper extends BaseIntegrationTest {
                 createURLWithPort("/api/v1/inventory-service/vehicles"),
                 vehicleRequest,
                 Vehicle.class);
+    }
+
+    public ResponseEntity<String> whenBadPostRequestIsMade(Vehicle vehicleRequest) {
+        return restTemplate.postForEntity(
+                createURLWithPort("/api/v1/inventory-service/vehicles"),
+                vehicleRequest,
+                String.class);
     }
 
     public ResponseEntity<Vehicle> whenPutRequestIsMade(Vehicle vehicleRequest, UUID vehicleId) {

@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 @Component
 public class VehicleValidator extends BaseValidator<Vehicle> {
+
     private static final int CURRENT_YEAR = LocalDate.now().getYear();
     private static final int MIN_YEAR = 1900;
     private static final Pattern VIN_PATTERN = Pattern.compile("[A-HJ-NPR-Z0-9]{17}");
@@ -22,6 +23,8 @@ public class VehicleValidator extends BaseValidator<Vehicle> {
 
     @Override
     protected void doValidate(Vehicle vehicle) throws ValidationException {
+       clearErrors();
+
         if (vehicle == null) {
             throw ValidationException.requiredFieldMissing("vehicle", null);
         }
@@ -31,6 +34,9 @@ public class VehicleValidator extends BaseValidator<Vehicle> {
         validatePrice(vehicle);
         validateStatus(vehicle);
         validateSyncInfo(vehicle);
+
+        returnErrors();
+
     }
 
     private void validateVin(Vehicle vehicle) {

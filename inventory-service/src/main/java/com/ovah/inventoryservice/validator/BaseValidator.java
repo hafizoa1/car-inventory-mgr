@@ -18,14 +18,8 @@ public abstract class BaseValidator<T> {
     }
 
     public final ValidationErrorAggregator<T> validate(T request) {
-        try {
-            doValidate(request);
-        } catch (ValidationException e) {
-            // Safe to cast because we know these errors are for type T
-            @SuppressWarnings("unchecked")
-            List<ValidationError<T>> typedErrors = (List<ValidationError<T>>) (List<?>) e.getErrors();
-            errorAggregator.addErrors(typedErrors);
-        }
+        doValidate(request);
+        returnErrors();
 
         if (next != null) {
             errorAggregator.merge(next.validate(request));
@@ -38,5 +32,13 @@ public abstract class BaseValidator<T> {
 
     protected void addError(String field, String message, ValidationError.ErrorCode code, T rejectedValue) {
         errorAggregator.addError(new ValidationError<>(field, message, code, rejectedValue));
+    }
+
+    protected void returnErrors() {
+        errorAggregator.throwIfHasErrors();
+    }
+
+    protected void clearErrors() {
+        errorAggregator.clear();
     }
 }
