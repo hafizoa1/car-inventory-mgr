@@ -53,7 +53,10 @@ TODO: Future API Improvements
 
     @PostMapping("/vehicles")
     @Operation(summary = "Create a new vehicle", description = "Submit vehicle data to create a new vehicle entry")
-    @ApiResponse(responseCode = "201", description = "Vehicle created successfully")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Vehicle created successfully"),
+            @ApiResponse(responseCode = "400", description = "Validation errors for Vehicle")
+    })
     public ResponseEntity<Vehicle> createVehicle(
             @Parameter(description = "Vehicle data to be created", required = true)
             @RequestBody Vehicle vehicle) {
@@ -64,7 +67,8 @@ TODO: Future API Improvements
     @Operation(summary = "Update an existing vehicle", description = "Provide an ID and vehicle data to update an existing vehicle")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Vehicle updated successfully"),
-            @ApiResponse(responseCode = "404", description = "Vehicle not found with the provided ID")
+            @ApiResponse(responseCode = "404", description = "Vehicle not found with the provided ID"),
+            @ApiResponse(responseCode = "400", description = "Validation errors for Vehicle")
     })
     public ResponseEntity<Vehicle> updateVehicle(
             @Parameter(description = "ID of the vehicle to update", required = true)

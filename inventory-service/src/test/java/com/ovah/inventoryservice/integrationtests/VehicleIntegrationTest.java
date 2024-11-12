@@ -34,18 +34,13 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
 
             @Test
             void successfullyCreateVehicle() {
-                // Given: A vehicle request
+
                 Vehicle vehicleRequest = givenValidVehicle();
 
-                // When: We make a POST request to create the vehicle
                 ResponseEntity<Vehicle> response = whenPostRequestIsMade(vehicleRequest);
 
-                // Then: The response is successful and the vehicle is in the database
                 thenResponseIsCreated(response);
 
-                //thenVehicleExistsInDatabase
-
-                // And: The stored vehicle matches our request
                 Vehicle savedVehicle = vehicleRepository.findById(response.getBody().getId())
                         .orElseThrow(() -> new AssertionError("Vehicle not found in database"));
 
@@ -104,9 +99,6 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
                 Vehicle invalidVehicle = givenInvalidVehicle();
 
                 ResponseEntity<String> response = whenBadPostRequestIsMade(invalidVehicle);
-                //log.info("Response Status: {}", response.getStatusCode());
-                //log.info("Response Body: {}", response.getBody());
-
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 
@@ -117,10 +109,28 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
 
             }*/
 
-            /*@Test
-            void InvalidDataTypeInField() { //should fail for bad vin number
+            @Test
+            void InvalidDataTypeInField() {
+                Vehicle vehcicleWithInvalidFormat = givenVehicleWithInvalidFormats();
+                ResponseEntity<String> response = whenBadPostRequestIsMade(vehcicleWithInvalidFormat);
 
-            }*/
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            }
+
+            @Test
+            void shouldNotCreateVehicleWithNegativePrice() {
+            // Given a vehicle with an invalid (negative) price
+                Vehicle invalidVehicle = givenValidVehicle();
+                invalidVehicle.setPrice(BigDecimal.valueOf(-1000));
+
+            // When posting the vehicle
+                ResponseEntity<String> response = whenBadPostRequestIsMade(invalidVehicle);
+
+            // Then the response should be BAD_REQUEST
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            }
+
 
         }
 
@@ -159,10 +169,20 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
                         });
             }
 
-            /*@Test
-            void unsucessfullyUpdateUnchangeableFields() {
 
-            }*/
+            @Test
+            void shouldReturnNotFoundWhenUpdatingNonexistentVehicle() {
+                // Given a vehicle ID that does not exist
+                UUID nonExistentId = UUID.randomUUID();
+                Vehicle updateRequest = givenValidVehicle();
+                updateRequest.setId(nonExistentId);
+
+                // When attempting to update
+                ResponseEntity<String> response = whenBadPutRequestIsMade(updateRequest, nonExistentId);
+
+                // Then ensure the response is NOT_FOUND
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            }
         }
 
         @Nested
@@ -212,6 +232,18 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
                 // Then
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
                 assertThat(vehicleRepository.findById(existingVehicle.getId())).isEmpty();
+            }
+
+            @Test
+            void shouldReturnNotFoundWhenDeletingNonexistentVehicle() {
+                // Given a random UUID that does not correspond to any vehicle
+                UUID nonExistentId = UUID.randomUUID();
+
+                // When trying to delete this vehicle
+                ResponseEntity<Void> response = whenDeleteRequestIsMade(nonExistentId);
+
+                // Then ensure the response is NOT_FOUND
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
             }
         }
 

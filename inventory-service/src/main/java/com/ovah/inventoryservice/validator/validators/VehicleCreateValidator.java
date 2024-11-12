@@ -3,9 +3,13 @@ package com.ovah.inventoryservice.validator.validators;
 
 import com.ovah.inventoryservice.exception.ValidationException;
 import com.ovah.inventoryservice.model.Vehicle;
+import com.ovah.inventoryservice.repository.VehicleRepository;
 import com.ovah.inventoryservice.validator.BaseValidator;
 import com.ovah.inventoryservice.validator.ValidationError;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,13 +17,18 @@ import java.util.regex.Pattern;
 
 
 @Component
-public class VehicleValidator extends BaseValidator<Vehicle> {
+@AllArgsConstructor
+public class VehicleCreateValidator extends BaseValidator<Vehicle> {
+
+    private final VehicleRepository vehicleRepository;
 
     private static final int CURRENT_YEAR = LocalDate.now().getYear();
     private static final int MIN_YEAR = 1900;
     private static final Pattern VIN_PATTERN = Pattern.compile("[A-HJ-NPR-Z0-9]{17}");
     private static final BigDecimal MIN_PRICE = BigDecimal.ZERO;
     private static final Pattern VALID_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s-]+$");
+
+
 
     @Override
     protected void doValidate(Vehicle vehicle) throws ValidationException {
@@ -34,6 +43,8 @@ public class VehicleValidator extends BaseValidator<Vehicle> {
         validatePrice(vehicle);
         validateStatus(vehicle);
         validateSyncInfo(vehicle);
+
+        validateUniqueVin(vehicle);
 
         returnErrors();
 
@@ -130,6 +141,13 @@ public class VehicleValidator extends BaseValidator<Vehicle> {
                     ValidationError.ErrorCode.BUSINESS_RULE_VIOLATION,
                     vehicle
             );
+        }
+    }
+
+    private void validateUniqueVin(Vehicle vehicle) {
+        String vin = vehicle.getVin();
+        if (vehicleRepository.findByVin(vin).isPresent()) {
+            throw new HttpClientErrorException(HttpStatus.CONFLICT, "Vehicle with the provided VIN already exists");
         }
     }
 }

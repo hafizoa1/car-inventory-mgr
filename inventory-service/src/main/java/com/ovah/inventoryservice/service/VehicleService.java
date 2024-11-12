@@ -5,7 +5,8 @@ import com.ovah.inventoryservice.messaging.VehicleMessageProducer;
 import com.ovah.inventoryservice.model.Vehicle;
 import com.ovah.inventoryservice.model.sync.SyncStatus;
 import com.ovah.inventoryservice.repository.VehicleRepository;
-import com.ovah.inventoryservice.validator.validators.VehicleValidator;
+import com.ovah.inventoryservice.validator.validators.VehicleCreateValidator;
+import com.ovah.inventoryservice.validator.validators.VehicleUpdateValidator;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,9 @@ public class VehicleService {
 
     private final VehicleMessageProducer vehicleMessageProducer;
 
-    private final VehicleValidator vehicleValidator;
+    private final VehicleCreateValidator vehicleCreateValidator;
+
+    private final VehicleUpdateValidator vehicleUpdateValidator;
 
     public ResponseEntity<Vehicle> getVehicleById(UUID id) {
         return vehicleRepository.findById(id)
@@ -34,7 +37,7 @@ public class VehicleService {
 
     @Transactional
     public ResponseEntity<Vehicle> createVehicle(Vehicle vehicle) {
-        vehicleValidator.validate(vehicle);
+        vehicleCreateValidator.validate(vehicle);
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
         log.info("Created vehicle with id: {}", savedVehicle.getId());
         vehicleMessageProducer.sendVehicleCreatedMessage(savedVehicle);
@@ -43,7 +46,7 @@ public class VehicleService {
 
     @Transactional
     public ResponseEntity<Vehicle> updateVehicle(UUID id, Vehicle updateRequest) {
-        //vehicleValidator.validate(updateRequest);
+        vehicleUpdateValidator.validate(updateRequest);
         return vehicleRepository.findById(id)
                 .map(existingVehicle -> {
                     // Update mutable fields only

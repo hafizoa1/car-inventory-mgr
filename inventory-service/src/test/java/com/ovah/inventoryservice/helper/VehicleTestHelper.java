@@ -93,6 +93,14 @@ public abstract class VehicleTestHelper extends BaseIntegrationTest {
                 Vehicle.class);
     }
 
+    public ResponseEntity<String> whenBadPutRequestIsMade(Vehicle vehicleRequest, UUID vehicleId) {
+        return restTemplate.exchange(
+                createURLWithPort("/api/v1/inventory-service/vehicles/" + vehicleId),
+                HttpMethod.PUT,
+                new HttpEntity<>(vehicleRequest),
+                String.class);
+    }
+
     public ResponseEntity<Void> whenDeleteRequestIsMade(UUID vehicleId) {
         return restTemplate.exchange(
                 createURLWithPort("/api/v1/inventory-service/vehicles/" + vehicleId),
