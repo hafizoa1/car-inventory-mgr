@@ -1,0 +1,40 @@
+// header.component.scss
+.custom-toolbar {
+  background: white; // or your preferred color
+  color: #333; // text color
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); // subtle shadow instead of border
+
+  .mat-icon {
+    color: #666; // icon color
+  }
+
+  mat-form-field {
+    font-size: 14px;
+    width: 200px;
+    margin: 0 20px;
+    
+    ::ng-deep {
+      .mat-form-field-wrapper {
+        padding-bottom: 0;
+      }
+      
+      .mat-form-field-outline {
+        background: rgba(0,0,0,0.04);
+      }
+      
+      .mat-form-field-infix {
+        padding: 0.5em 0;
+      }
+    }
+  }
+
+  button {
+    &:hover {
+      background: rgba(0,0,0,0.04);
+    }
+  }
+}
+
+.spacer {
+  flex: 1 1 auto;
+}

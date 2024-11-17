@@ -1,0 +1,36 @@
+<div *ngIf="!loading" class="dashboard-container">
+    <!-- Inventory Section -->
+    <div class="stat-card">
+      <h3>Inventory Stats</h3>
+      <div class="stat-details">
+        <p>Total Items: {{ stats.inventory.total }}</p>
+        <p>Active Items: {{ stats.inventory.active }}</p>
+        <p>Sold Items: {{ stats.inventory.sold }}</p>
+      </div>
+    </div>
+  
+    <!-- Leads Section -->
+    <div class="stat-card">
+      <h3>Leads</h3>
+      <div class="stat-details">
+        <p>New Leads: {{ stats.leads.new }}</p>
+        <p>Open Leads: {{ stats.leads.open }}</p>
+        <p>Closed Leads: {{ stats.leads.closed }}</p>
+      </div>
+    </div>
+  
+    <!-- Ads Section -->
+    <div class="stat-card">
+      <h3>Advertisement Performance</h3>
+      <div class="stat-details">
+        <p>Active Campaigns: {{ stats.ads.active }}</p>
+        <p>Total Views: {{ stats.ads.views }}</p>
+        <p>CTR: {{ stats.ads.ctr }}%</p>
+        <p>Conversion Rate: {{ stats.ads.conversion }}%</p>
+      </div>
+    </div>
+  </div>
+  
+  <div *ngIf="loading">
+    Loading...
+  </div>

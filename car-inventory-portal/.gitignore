@@ -10,6 +10,7 @@
 /node_modules
 npm-debug.log
 yarn-error.log
+yarn-debug.log
 
 # IDEs and editors
 .idea/
@@ -19,6 +20,11 @@ yarn-error.log
 *.launch
 .settings/
 *.sublime-workspace
+/shelf/
+/workspace.xml
+/httpRequests/
+/dataSources/
+/dataSources.local.xml
 
 # Visual Studio Code
 .vscode/*
@@ -40,3 +46,30 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Environment Files
+/src/environments/*.js
+/src/environments/*.js.map
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Debug logs
+debug.log
+*.log
+
+# Compiled JavaScript & Source maps
+*.js.map
+*.css.map
+
+# E2E Testing
+/e2e/*.js
+/e2e/*.map
+/cypress/videos/
+/cypress/screenshots/
+
+# Optional: Build artifacts
+*.tsbuildinfo
+.tscache/
