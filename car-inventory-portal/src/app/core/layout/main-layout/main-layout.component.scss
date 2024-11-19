@@ -1,4 +1,3 @@
-// main-layout.component.scss
 .layout-container {
   display: grid;
   height: 100vh;
@@ -12,30 +11,20 @@
  
   .content-container {
     display: grid;
-    grid-template-columns: 250px 1fr;  // Sidebar and main content
-    
+    grid-template-columns: 250px 1fr;
+   
     .sidebar-section {
       background: #fafafa;
       border-right: 1px solid #ddd;
-      padding: 10px;
     }
  
     .main-content {
       background: white;
       padding: 20px;
-      overflow-y: auto;  // Allows scrolling if content is too long
-      
-      // Center the dashboard content if needed
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;  // Or 'center' if you want vertical centering too
-      
-      // Optional: Add max-width to prevent stretching too wide
-      > app-main-dashboard {
-        width: 100%;
-        max-width: 1200px;  // Adjust this value as needed
-        margin: 0 auto;
-      }
+      overflow-y: auto;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
     }
   }
 }

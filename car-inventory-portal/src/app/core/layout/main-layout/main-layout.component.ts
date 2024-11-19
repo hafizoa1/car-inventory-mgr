@@ -1,25 +1,20 @@
+// main-layout.component.ts
 import { Component } from '@angular/core';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-import { MainDashboardComponent } from '../main-dashboard/main-dashboard.component';
-import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterModule } from '@angular/router';
-import { RouterOutlet } from '@angular/router';
-
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-main-layout',
-  templateUrl: './main-layout.component.html',
-  styleUrls: ['./main-layout.component.scss'],
+  standalone: true,
   imports: [
+    CommonModule,
     HeaderComponent,
     SidebarComponent,
-    MainDashboardComponent,
-    MatSidenavModule,
-    RouterModule, 
-    RouterOutlet
+    RouterModule
   ],
-  standalone: true
+  templateUrl: './main-layout.component.html',
+  styleUrls: ['./main-layout.component.scss']
 })
-
 export class MainLayoutComponent {}

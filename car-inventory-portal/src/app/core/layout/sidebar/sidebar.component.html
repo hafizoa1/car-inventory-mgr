@@ -1,6 +1,8 @@
 <mat-nav-list>
-    <a *ngFor="let item of navItems">
-      <mat-icon>{{item.icon}}</mat-icon>
-      <span>{{item.label}}</span>
-    </a>
-   </mat-nav-list>
+  <a mat-list-item *ngFor="let item of navigationService.navItems"
+     (click)="navigationService.navigate(item.path)"
+     class="nav-item">
+    <mat-icon>{{item.icon}}</mat-icon>
+    <span class="nav-label">{{item.label}}</span>
+  </a>
+</mat-nav-list>
