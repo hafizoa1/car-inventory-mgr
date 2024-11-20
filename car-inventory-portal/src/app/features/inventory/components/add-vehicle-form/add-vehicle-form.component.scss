@@ -1,0 +1,33 @@
+mat-dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  
+  mat-form-field {
+    width: 100%;
+  }
+  
+  mat-error {
+    font-size: 12px;
+  }
+  
+  .mat-mdc-dialog-actions {
+    padding: 16px;
+    gap: 8px;
+  }
+  
+  button[type="submit"] {
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    
+    mat-spinner {
+      margin-right: 8px;
+    }
+  }
