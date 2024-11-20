@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -49,6 +50,16 @@ TODO: Future API Improvements
             @Parameter(description = "ID of the vehicle to retrieve", required = true)
             @PathVariable UUID id) {
         return vehicleService.getVehicleById(id);
+    }
+
+    @GetMapping("/vehicles")
+    @Operation(summary = "Get all vehicles in the database", description = "Retrieve a list of all vehicles stored in the database.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved all vehicles"),
+            @ApiResponse(responseCode = "204", description = "No vehicles found")
+    })
+    public ResponseEntity<List<Vehicle>> getAllVehicles() {
+        return vehicleService.getAllVehicles();
     }
 
     @PostMapping("/vehicles")

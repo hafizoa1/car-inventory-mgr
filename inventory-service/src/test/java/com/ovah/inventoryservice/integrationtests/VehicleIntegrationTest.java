@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -187,6 +189,38 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
 
         @Nested
         class VehicleRetrievalTests {
+
+            @Test
+            void successfullyRetrieveAllVehicles() {
+                // Given
+                Vehicle vehicle1 = givenValidVehicle();
+                vehicle1.setId(UUID.randomUUID());
+                Vehicle vehicle2 = givenValidVehicle();
+                vehicle2.setId(UUID.randomUUID());
+                when(vehicleRepository.findAll()).thenReturn(List.of(vehicle1, vehicle2));
+
+                // When
+                ResponseEntity<List<Vehicle>> response = whenGetAllRequestIsMade();
+
+                // Then
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                assertThat(response.getBody()).isNotEmpty();
+                assertThat(response.getBody().size()).isEqualTo(2);
+                assertThat(response.getBody()).contains(vehicle1, vehicle2);
+            }
+
+            @Test
+            void retrieveNoVehiclesReturnsNoContent() {
+                // Given no vehicles are available
+                when(vehicleRepository.findAll()).thenReturn(Collections.emptyList());
+
+                // When
+                ResponseEntity<List<Vehicle>> response = whenGetAllRequestIsMade();
+
+                // Then
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+                assertThat(response.getBody()).isNull();
+            }
             @Test
             void successfullyRetrieveVehicle() {
                 // Given

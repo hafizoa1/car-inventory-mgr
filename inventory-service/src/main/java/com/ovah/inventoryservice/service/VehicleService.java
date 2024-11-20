@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -34,6 +35,13 @@ public class VehicleService {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    public ResponseEntity<List<Vehicle>> getAllVehicles() {
+        List<Vehicle> vehicles = vehicleRepository.findAll();
+        if (vehicles.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(vehicles);
+    }
 
     @Transactional
     public ResponseEntity<Vehicle> createVehicle(Vehicle vehicle) {

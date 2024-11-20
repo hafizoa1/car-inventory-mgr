@@ -7,11 +7,13 @@ import com.ovah.inventoryservice.model.sync.SyncStatus;
 import com.ovah.inventoryservice.repository.VehicleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import static com.ovah.inventoryservice.model.VehicleStatus.AVAILABLE;
@@ -113,6 +115,16 @@ public abstract class VehicleTestHelper extends BaseIntegrationTest {
         return restTemplate.getForEntity(
                 createURLWithPort("/api/v1/inventory-service/vehicles/" + vehicleId),
                 Vehicle.class);
+    }
+
+
+    public ResponseEntity<List<Vehicle>> whenGetAllRequestIsMade() {
+        return restTemplate.exchange(
+                createURLWithPort("/api/v1/inventory-service/vehicles"),
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Vehicle>>() {}
+        );
     }
 
     public void thenResponseIsCreated(ResponseEntity<Vehicle> response) {
