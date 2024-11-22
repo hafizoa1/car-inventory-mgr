@@ -58,6 +58,7 @@ public class VehicleService {
         return vehicleRepository.findById(id)
                 .map(existingVehicle -> {
                     // Update mutable fields only
+                    existingVehicle.setVin(updateRequest.getVin());
                     existingVehicle.setMake(updateRequest.getMake());
                     existingVehicle.setModel(updateRequest.getModel());
                     existingVehicle.setYear(updateRequest.getYear());

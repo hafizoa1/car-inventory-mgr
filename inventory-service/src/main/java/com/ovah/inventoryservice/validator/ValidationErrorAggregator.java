@@ -25,7 +25,6 @@ public class ValidationErrorAggregator<T> {
             throw new ValidationException("Multiple validation errors occurred",
                     new ArrayList<>(errors));// Create new list to avoid exposing internal state
         }
-        //clear();
     }
 
     public boolean hasErrors() {
