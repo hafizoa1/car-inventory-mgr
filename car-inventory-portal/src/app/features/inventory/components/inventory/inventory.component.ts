@@ -69,9 +69,28 @@ export class InventoryComponent implements OnInit {
     });
   }
 
+  searchVehicles(): void {
+    const term = this.searchTerm.toLowerCase().trim();
+    if (!term) {
+      this.loadVehicles();
+      return;
+    }
+    
+    this.vehicles = this.vehicles.filter(vehicle => 
+      vehicle.make.toLowerCase().includes(term) ||
+      vehicle.model.toLowerCase().includes(term) ||
+      vehicle.year.toString().includes(term) ||
+      vehicle.vin.toLowerCase().includes(term)
+    );
+  }
+
+  resetSearch() {
+    this.searchTerm = '';
+    this.loadVehicles();
+  }
+
   deleteVehicle() {
     const vehicleId = this.selectedVehicle?.id;
-    // Runtime check - we know id exists but TypeScript needs convincing
     if (!vehicleId) {
       console.error('Vehicle has no ID');
       return;
@@ -93,9 +112,11 @@ export class InventoryComponent implements OnInit {
   }
 
   editVehicle() {
-    if (!this.selectedVehicle) {
+    if (!this.selectedVehicle?.id) {
       return;
     }
+  
+    const vehicleId = this.selectedVehicle.id;
   
     const dialogRef = this.dialog.open(EditVehicleDialogComponent, {
       width: '500px',
@@ -104,14 +125,38 @@ export class InventoryComponent implements OnInit {
     });
   
     dialogRef.afterClosed().subscribe(result => {
-      if (result && this.selectedVehicle?.id) {  // Double check ID exists
-        this.vehicleService.updateVehicle(this.selectedVehicle.id, result).subscribe({
+      if (result) {
+        if (result.imageAction === 'delete') {
+          this.vehicleService.deleteVehicleImage(vehicleId).subscribe({
+            next: () => {
+              console.log('Image deleted successfully');
+              // Refresh vehicle data after image deletion
+              this.loadVehicles();
+            },
+            error: (err) => console.error('Error deleting image:', err)
+          });
+        }
+
+        this.vehicleService.updateVehicle(vehicleId, result.vehicleData).subscribe({
           next: (updatedVehicle) => {
-            // Update vehicles array and selected vehicle
-            this.vehicles = this.vehicles.map(v => 
+            this.vehicles = this.vehicles.map(v =>
               v.id === updatedVehicle.id ? updatedVehicle : v
             );
             this.selectedVehicle = updatedVehicle;
+  
+            if (result.imageAction === 'update' && result.imageFile) {
+              const formData = new FormData();
+              formData.append('file', result.imageFile);
+              
+              this.vehicleService.updateVehicleImage(vehicleId, formData).subscribe({
+                next: () => {
+                  console.log('Image uploaded successfully');
+                  // Refresh vehicle data after image upload
+                  this.loadVehicles();
+                },
+                error: (err) => console.error('Error uploading image:', err)
+              });
+            }
           },
           error: (error) => {
             console.error('Error updating vehicle:', error);
@@ -123,5 +168,4 @@ export class InventoryComponent implements OnInit {
       }
     });
   }
-
 }

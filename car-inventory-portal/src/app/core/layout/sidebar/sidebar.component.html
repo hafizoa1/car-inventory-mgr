@@ -1,8 +1,9 @@
 <mat-nav-list>
   <a mat-list-item *ngFor="let item of navigationService.navItems"
-     (click)="navigationService.navigate(item.path)"
+     [routerLink]="item.path"
+     routerLinkActive="active"
      class="nav-item">
     <mat-icon>{{item.icon}}</mat-icon>
     <span class="nav-label">{{item.label}}</span>
   </a>
-</mat-nav-list>
+ </mat-nav-list>

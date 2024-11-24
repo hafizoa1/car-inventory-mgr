@@ -1,71 +1,60 @@
 <!-- inventory.component.html -->
 <div class="inventory-container">
-    <div class="header-section">
-      <div class="search-bar">
-        <mat-form-field appearance="outline">
-          <mat-label>Search Vehicles</mat-label>
-          <input matInput [(ngModel)]="searchTerm" placeholder="Search by make, model...">
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
+  
+
+  <div class="vehicles-grid">
+    <mat-card class="vehicle-preview" *ngFor="let vehicle of vehicles" (click)="selectVehicle(vehicle)">
+      <div class="vehicle-image">
+        <img [src]="vehicle.image ? 'data:image/jpeg;base64,' + vehicle.image : 'https://via.placeholder.com/300x200?text=Vehicle'" 
+             alt="Vehicle image">
       </div>
-      
-      <button mat-raised-button color="primary" (click)="addNewVehicle()">
-        <mat-icon>add</mat-icon>
-        Add New Vehicle
-      </button>
-    </div>
-  
-    <div class="vehicles-grid">
-      <mat-card class="vehicle-preview" *ngFor="let vehicle of vehicles" (click)="selectVehicle(vehicle)">
-        <div class="vehicle-image">
-          <img src="https://via.placeholder.com/300x200?text=Vehicle" alt="Vehicle image">
-        </div>
-        <mat-card-content>
-          <h3>{{vehicle.year}} {{vehicle.make}} {{vehicle.model}}</h3>
-          <p class="price">{{vehicle.price | currency}}</p>
-          <span class="status-badge" [class]="vehicle.status.toLowerCase()">{{vehicle.status}}</span>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  
-    <div class="overlay" *ngIf="selectedVehicle" (click)="selectedVehicle = null"></div>
-    
-    <div class="vehicle-details" *ngIf="selectedVehicle">
-      <mat-card>
-        <div class="card-header">
-          <mat-card-title>
-            {{selectedVehicle.year}} {{selectedVehicle.make}} {{selectedVehicle.model}}
-          </mat-card-title>
-          <button mat-icon-button (click)="selectedVehicle = null">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
-        
-        <div class="details-content">
-          <div class="vehicle-image">
-            <img src="https://via.placeholder.com/300x200?text=Vehicle" alt="Vehicle image">
-          </div>
-          
-          <div class="vehicle-info">
-            <p><strong>VIN:</strong> {{selectedVehicle.vin}}</p>
-            <p><strong>Price:</strong> {{selectedVehicle.price | currency}}</p>
-            <p><strong>Status:</strong> 
-              <span class="status-badge" [class]="selectedVehicle.status.toLowerCase()">
-                {{selectedVehicle.status}}
-              </span>
-            </p>
-            <p><strong>Sync Status:</strong> {{selectedVehicle.syncStatus}}</p>
-          </div>
-        </div>
-  
-        <mat-card-actions>
-          <button mat-button color="primary" (click)="editVehicle()">
-            Edit
-          </button>
-          <button mat-button color="warn" (click)="deleteVehicle()">
-            Delete
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
+      <mat-card-content>
+        <h3>{{vehicle.year}} {{vehicle.make}} {{vehicle.model}}</h3>
+        <p class="price">{{vehicle.price | currency: 'GBP'}}</p>
+        <span class="status-badge" [class]="vehicle.status.toLowerCase()">{{vehicle.status}}</span>
+      </mat-card-content>
+    </mat-card>
   </div>
+
+  <div class="overlay" *ngIf="selectedVehicle" (click)="selectedVehicle = null"></div>
+ 
+  <div class="vehicle-details" *ngIf="selectedVehicle">
+    <mat-card>
+      <div class="card-header">
+        <mat-card-title>
+          {{selectedVehicle.year}} {{selectedVehicle.make}} {{selectedVehicle.model}}
+        </mat-card-title>
+        <button mat-icon-button (click)="selectedVehicle = null">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+     
+      <div class="details-content">
+        <div class="vehicle-image">
+          <img [src]="selectedVehicle.image ? 'data:image/jpeg;base64,' + selectedVehicle.image : 'https://via.placeholder.com/300x200?text=Vehicle'" 
+               alt="Vehicle image">
+        </div>
+       
+        <div class="vehicle-info">
+          <p><strong>VIN:</strong> {{selectedVehicle.vin}}</p>
+          <p><strong>Price:</strong> {{selectedVehicle.price | currency: 'GBP'}}</p>
+          <p><strong>Status:</strong>
+            <span class="status-badge" [class]="selectedVehicle.status.toLowerCase()">
+              {{selectedVehicle.status}}
+            </span>
+          </p>
+          <p><strong>Sync Status:</strong> {{selectedVehicle.syncStatus}}</p>
+        </div>
+      </div>
+
+      <mat-card-actions>
+        <button mat-button color="primary" (click)="editVehicle()">
+          Edit
+        </button>
+        <button mat-button color="warn" (click)="deleteVehicle()">
+          Delete
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

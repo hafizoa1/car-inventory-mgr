@@ -40,6 +40,8 @@ public class Vehicle {
     @Column(nullable = false)
     private BigDecimal price;
 
+    private byte[] image;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VehicleStatus status;

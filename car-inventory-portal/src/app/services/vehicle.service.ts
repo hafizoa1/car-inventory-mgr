@@ -10,6 +10,7 @@ export interface Vehicle {
   model: string;
   year: number;
   price: number;
+  image?: string | null; 
   status: 'AVAILABLE' | 'SOLD' | 'PENDING';
   autoTraderListingId?: string;
   lastSyncAttempt?: string;
@@ -69,6 +70,19 @@ export class VehicleService {
       catchError(this.handleError)
     );
   }
+
+  updateVehicleImage(id: string, formData: FormData): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/image`, formData).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  deleteVehicleImage(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}/image`).pipe(
+      catchError(this.handleError)
+    );
+  }
+  
 
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'An error occurred';
@@ -139,7 +153,7 @@ export class VehicleService {
   }
 
   getFormattedPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: 'GBP'
     }).format(price);

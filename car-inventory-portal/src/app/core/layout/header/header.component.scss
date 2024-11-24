@@ -1,13 +1,21 @@
-// header.component.scss
 .custom-toolbar {
-  background: white; // or your preferred color
-  color: #333; // text color
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1); // subtle shadow instead of border
-
-  .mat-icon {
-    color: #666; // icon color
+  background: #1a237e;  // Deep blue background
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  position: relative;
+  width: 100%;
+  height: 64px;
+ 
+  span {
+    color: white;
+    font-weight: 500;
+    font-size: 1.2rem;
   }
-
+ 
+  .mat-icon {
+    color: #fff;
+  }
+ 
   mat-form-field {
     font-size: 14px;
     width: 200px;
@@ -19,7 +27,7 @@
       }
       
       .mat-form-field-outline {
-        background: rgba(0,0,0,0.04);
+        background: rgba(255,255,255,0.1);
       }
       
       .mat-form-field-infix {
@@ -27,14 +35,16 @@
       }
     }
   }
-
+ 
   button {
+    margin-left: 8px;
+    
     &:hover {
-      background: rgba(0,0,0,0.04);
+      background: rgba(255,255,255,0.1);
     }
   }
-}
-
-.spacer {
+ }
+ 
+ .spacer {
   flex: 1 1 auto;
-}
+ }

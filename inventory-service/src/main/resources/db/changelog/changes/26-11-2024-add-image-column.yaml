@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: hafiz
+      changes:
+        - addColumn:
+            tableName: vehicles
+            columns:
+              - column:
+                  name: image
+                  type: BYTEA

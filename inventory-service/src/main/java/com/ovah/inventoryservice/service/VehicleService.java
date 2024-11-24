@@ -7,13 +7,18 @@ import com.ovah.inventoryservice.model.sync.SyncStatus;
 import com.ovah.inventoryservice.repository.VehicleRepository;
 import com.ovah.inventoryservice.validator.validators.VehicleCreateValidator;
 import com.ovah.inventoryservice.validator.validators.VehicleUpdateValidator;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -53,7 +58,7 @@ public class VehicleService {
     }
 
     @Transactional
-    public ResponseEntity<Vehicle> updateVehicle(UUID id, Vehicle updateRequest) {
+    public ResponseEntity<Vehicle>  updateVehicle(UUID id, Vehicle updateRequest) {
         vehicleUpdateValidator.validate(updateRequest);
         return vehicleRepository.findById(id)
                 .map(existingVehicle -> {
@@ -78,7 +83,7 @@ public class VehicleService {
                 .orElseThrow(() -> new VehicleNotFoundException("Vehicle not found with id: " + id));
     }
 
-    public ResponseEntity<Void> deleteVehicle(UUID vehicleId) { //put this in a try catch
+    public ResponseEntity<Void> deleteVehicle(UUID vehicleId) {
         if (!vehicleRepository.existsById(vehicleId)) {
             throw new VehicleNotFoundException("Vehicle not found with ID: " + vehicleId);
         }
@@ -91,6 +96,28 @@ public class VehicleService {
         }
     }
 
+    public ResponseEntity<Void> uploadImage(UUID id, MultipartFile file) {
+       try {
+           Vehicle vehicle = vehicleRepository.findById(id)
+                   .orElseThrow(() -> new VehicleNotFoundException("Vehicle not found"));
 
+           vehicle.setImage(file.getBytes());
+           vehicleRepository.save(vehicle);
+           return ResponseEntity.noContent().build();
+       } catch (IOException e) {
+           throw new RuntimeException("Failed to upload image due to: " + e.getMessage(), e);
+       }
+    }
+
+    public ResponseEntity<Void> deleteImage(UUID id) {
+
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new VehicleNotFoundException("Vehicle not found"));
+
+        vehicle.setImage(null);
+        vehicleRepository.save(vehicle);
+        return ResponseEntity.noContent().build();
+
+    }
 }
 

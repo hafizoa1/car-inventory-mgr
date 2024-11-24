@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -99,6 +100,16 @@ TODO: Future API Improvements
             @Parameter(description = "ID of the vehicle to delete", required = true)
             @PathVariable UUID id) {
         return vehicleService.deleteVehicle(id);
+    }
+
+    @PostMapping("vehicles/{id}/image")
+    public ResponseEntity<Void> uploadImage(@PathVariable UUID id, @RequestParam MultipartFile file) {
+        return vehicleService.uploadImage(id, file);
+    }
+
+    @DeleteMapping("vehicles/{id}/image")
+    public ResponseEntity<Void> deleteImage(@PathVariable UUID id) {
+        return vehicleService.deleteImage(id);
     }
 
 

@@ -5,3 +5,6 @@ databaseChangeLog:
   - include:
       file: changes/26-10-2024-create-uuid-ossp-for-database.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/26-11-2024-add-image-column.yaml
+      relativeToChangelogFile: true
