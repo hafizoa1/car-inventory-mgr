@@ -115,43 +115,45 @@ export class InventoryComponent implements OnInit {
     if (!this.selectedVehicle?.id) {
       return;
     }
-  
+ 
     const vehicleId = this.selectedVehicle.id;
-  
+ 
     const dialogRef = this.dialog.open(EditVehicleDialogComponent, {
       width: '500px',
       data: this.selectedVehicle,
       disableClose: true
     });
-  
+ 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        // Handle image deletion first
         if (result.imageAction === 'delete') {
           this.vehicleService.deleteVehicleImage(vehicleId).subscribe({
             next: () => {
               console.log('Image deleted successfully');
-              // Refresh vehicle data after image deletion
-              this.loadVehicles();
+              this.loadVehicles();  // Refresh data
             },
             error: (err) => console.error('Error deleting image:', err)
           });
+          return;  // Exit here to avoid vehicle update
         }
 
+        // Handle regular vehicle update
         this.vehicleService.updateVehicle(vehicleId, result.vehicleData).subscribe({
           next: (updatedVehicle) => {
             this.vehicles = this.vehicles.map(v =>
               v.id === updatedVehicle.id ? updatedVehicle : v
             );
             this.selectedVehicle = updatedVehicle;
-  
+ 
+            // Handle image upload if needed
             if (result.imageAction === 'update' && result.imageFile) {
               const formData = new FormData();
               formData.append('file', result.imageFile);
-              
+             
               this.vehicleService.updateVehicleImage(vehicleId, formData).subscribe({
                 next: () => {
                   console.log('Image uploaded successfully');
-                  // Refresh vehicle data after image upload
                   this.loadVehicles();
                 },
                 error: (err) => console.error('Error uploading image:', err)

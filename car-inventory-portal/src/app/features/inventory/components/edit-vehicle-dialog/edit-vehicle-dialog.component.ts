@@ -65,20 +65,23 @@ export class EditVehicleDialogComponent {
   removeImage() {
     this.currentImage = null;
     this.selectedFile = null;
+    this.dialogRef.close({ 
+      vehicleData: this.vehicleForm.value, 
+      imageAction: 'delete' 
+    });
   }
 
   onSubmit() {
     if (this.vehicleForm.valid) {
-      // Regular vehicle data
       const updatedVehicle: Vehicle = {
         ...this.data,
         ...this.vehicleForm.value
       };
   
-      // Return both vehicle data and image file separately
       this.dialogRef.close({
         vehicleData: updatedVehicle,
-        imageFile: this.selectedFile || null  // Will be null if no new image selected
+        imageAction: this.selectedFile ? 'update' : null,
+        imageFile: this.selectedFile || null 
       });
     }
   }
