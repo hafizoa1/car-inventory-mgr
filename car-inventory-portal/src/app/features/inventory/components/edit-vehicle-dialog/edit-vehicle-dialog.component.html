@@ -1,91 +1,124 @@
 <h2 mat-dialog-title>Edit Vehicle</h2>
-    <form [formGroup]="vehicleForm" (ngSubmit)="onSubmit()">
-      <mat-dialog-content>
-
-        <div class="image-upload-section">
-          <div class="current-image" *ngIf="currentImage">
-            <img [src]="currentImage" alt="Vehicle Image">
-          </div>
-          <div class="upload-controls">
-            <input
-              type="file"
-              #fileInput
-              accept="image/*"
-              style="display: none"
-              (change)="onFileSelected($event)">
-            <button 
-              mat-stroked-button 
-              type="button" 
-              (click)="fileInput.click()">
-              <mat-icon>upload</mat-icon>
-              {{ currentImage ? 'Change Image' : 'Upload Image' }}
-            </button>
-            <button 
-              *ngIf="currentImage" 
-              mat-icon-button 
-              type="button" 
-              color="warn"
-              (click)="removeImage()">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-        </div>
-
-
-        <mat-form-field appearance="outline">
-          <mat-label>Make</mat-label>
-          <input matInput formControlName="make">
-          <mat-error *ngIf="vehicleForm.get('make')?.errors?.['required']">
-            Make is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Model</mat-label>
-          <input matInput formControlName="model">
-          <mat-error *ngIf="vehicleForm.get('model')?.errors?.['required']">
-            Model is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Year</mat-label>
-          <input matInput type="number" formControlName="year">
-          <mat-error *ngIf="vehicleForm.get('year')?.errors?.['required']">
-            Year is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>VIN</mat-label>
-          <input matInput formControlName="vin">
-          <mat-error *ngIf="vehicleForm.get('vin')?.errors?.['required']">
-            VIN is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Price</mat-label>
-          <input matInput type="number" formControlName="price">
-          <mat-error *ngIf="vehicleForm.get('price')?.errors?.['required']">
-            Price is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status">
-            <mat-option value="AVAILABLE">Available</mat-option>
-            <mat-option value="PENDING">Pending</mat-option>
-            <mat-option value="SOLD">Sold</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </mat-dialog-content>
-
-      <mat-dialog-actions align="end">
-        <button mat-button type="button" mat-dialog-close>Cancel</button>
-        <button mat-button color="primary" type="submit" [disabled]="!vehicleForm.valid">
-          Save Changes
+<form [formGroup]="vehicleForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content>
+    <div class="image-upload-section">
+      <div class="current-image" *ngIf="currentImage">
+        <img [src]="currentImage" alt="Vehicle Image">
+      </div>
+      <div class="upload-controls">
+        <input
+          type="file"
+          #fileInput
+          accept="image/*"
+          style="display: none"
+          (change)="onFileSelected($event)">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="fileInput.click()">
+          <mat-icon>upload</mat-icon>
+          {{ currentImage ? 'Change Image' : 'Upload Image' }}
         </button>
-      </mat-dialog-actions>
-    </form>
+        <button
+          *ngIf="currentImage"
+          mat-icon-button
+          type="button"
+          color="warn"
+          (click)="removeImage()">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Make Field -->
+    <mat-form-field appearance="outline">
+      <mat-label>Make</mat-label>
+      <input matInput formControlName="make" required>
+      <mat-error *ngIf="vehicleForm.get('make')?.touched && vehicleForm.get('make')?.errors">
+        <span *ngIf="vehicleForm.get('make')?.errors?.['required']">Make is required</span>
+        <span *ngIf="vehicleForm.get('make')?.errors?.['serverError']">
+          {{vehicleForm.get('make')?.errors?.['serverError']}}
+        </span>
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Model Field -->
+    <mat-form-field appearance="outline">
+      <mat-label>Model</mat-label>
+      <input matInput formControlName="model" required>
+      <mat-error *ngIf="vehicleForm.get('model')?.touched && vehicleForm.get('model')?.errors">
+        <span *ngIf="vehicleForm.get('model')?.errors?.['required']">Model is required</span>
+        <span *ngIf="vehicleForm.get('model')?.errors?.['serverError']">
+          {{vehicleForm.get('model')?.errors?.['serverError']}}
+        </span>
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Year Field -->
+    <mat-form-field appearance="outline">
+      <mat-label>Year</mat-label>
+      <input matInput type="number" formControlName="year" required min="1900">
+      <mat-error *ngIf="vehicleForm.get('year')?.touched && vehicleForm.get('year')?.errors">
+        <span *ngIf="vehicleForm.get('year')?.errors?.['required']">Year is required</span>
+        <span *ngIf="vehicleForm.get('year')?.errors?.['min']">Year must be 1900 or later</span>
+        <span *ngIf="vehicleForm.get('year')?.errors?.['serverError']">
+          {{vehicleForm.get('year')?.errors?.['serverError']}}
+        </span>
+      </mat-error>
+    </mat-form-field>
+
+    <!-- VIN Field -->
+    <mat-form-field appearance="outline">
+      <mat-label>VIN</mat-label>
+      <input matInput formControlName="vin" required>
+      <mat-error *ngIf="vehicleForm.get('vin')?.touched && vehicleForm.get('vin')?.errors">
+        <span *ngIf="vehicleForm.get('vin')?.errors?.['required']">VIN is required</span>
+        <span *ngIf="vehicleForm.get('vin')?.errors?.['serverError']">
+          {{vehicleForm.get('vin')?.errors?.['serverError']}}
+        </span>
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Price Field -->
+    <mat-form-field appearance="outline">
+      <mat-label>Price</mat-label>
+      <input matInput type="number" formControlName="price" required min="0">
+      <span matPrefix>£&nbsp;</span>
+      <mat-error *ngIf="vehicleForm.get('price')?.touched && vehicleForm.get('price')?.errors">
+        <span *ngIf="vehicleForm.get('price')?.errors?.['required']">Price is required</span>
+        <span *ngIf="vehicleForm.get('price')?.errors?.['min']">Price must be greater than 0</span>
+        <span *ngIf="vehicleForm.get('price')?.errors?.['serverError']">
+          {{vehicleForm.get('price')?.errors?.['serverError']}}
+        </span>
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Status Field -->
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status" required>
+        <mat-option value="AVAILABLE">Available</mat-option>
+        <mat-option value="PENDING">Pending</mat-option>
+        <mat-option value="SOLD">Sold</mat-option>
+      </mat-select>
+      <mat-error *ngIf="vehicleForm.get('status')?.touched && vehicleForm.get('status')?.errors">
+        <span *ngIf="vehicleForm.get('status')?.errors?.['required']">Status is required</span>
+        <span *ngIf="vehicleForm.get('status')?.errors?.['serverError']">
+          {{vehicleForm.get('status')?.errors?.['serverError']}}
+        </span>
+      </mat-error>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close [disabled]="isSubmitting">Cancel</button>
+    <button 
+      mat-raised-button 
+      color="primary" 
+      type="submit" 
+      [disabled]="!vehicleForm.valid || isSubmitting">
+      <mat-spinner diameter="20" *ngIf="isSubmitting"></mat-spinner>
+      <span *ngIf="!isSubmitting">Save Changes</span>
+    </button>
+  </mat-dialog-actions>
+</form>

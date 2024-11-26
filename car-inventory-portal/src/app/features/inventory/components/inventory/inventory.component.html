@@ -1,11 +1,29 @@
 <!-- inventory.component.html -->
 <div class="inventory-container">
-  
+  <div class="header-section">
+    <div class="search-bar">
+      <mat-form-field appearance="outline">
+        <mat-label>Search Vehicles</mat-label>
+        <input matInput [(ngModel)]="searchTerm" placeholder="Search by make, model...">
+        <button mat-icon-button matSuffix (click)="searchVehicles()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+      <button mat-button *ngIf="searchTerm" (click)="resetSearch()">
+        Clear Search
+      </button>
+    </div>
+   
+    <button mat-raised-button color="primary" (click)="addNewVehicle()">
+      <mat-icon>add</mat-icon>
+      Add New Vehicle
+    </button>
+  </div>
 
   <div class="vehicles-grid">
     <mat-card class="vehicle-preview" *ngFor="let vehicle of vehicles" (click)="selectVehicle(vehicle)">
       <div class="vehicle-image">
-        <img [src]="vehicle.image ? 'data:image/jpeg;base64,' + vehicle.image : 'https://via.placeholder.com/300x200?text=Vehicle'" 
+        <img [src]="vehicle.image ? 'data:image/jpeg;base64,' + vehicle.image : 'https://via.placeholder.com/300x200?text=Vehicle'"
              alt="Vehicle image">
       </div>
       <mat-card-content>
@@ -31,7 +49,7 @@
      
       <div class="details-content">
         <div class="vehicle-image">
-          <img [src]="selectedVehicle.image ? 'data:image/jpeg;base64,' + selectedVehicle.image : 'https://via.placeholder.com/300x200?text=Vehicle'" 
+          <img [src]="selectedVehicle.image ? 'data:image/jpeg;base64,' + selectedVehicle.image : 'https://via.placeholder.com/300x200?text=Vehicle'"
                alt="Vehicle image">
         </div>
        

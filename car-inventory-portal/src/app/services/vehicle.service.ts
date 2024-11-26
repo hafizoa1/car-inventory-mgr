@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, retry, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { ErrorService } from './error.service';
 
 export interface Vehicle {
   id?: string;
@@ -10,25 +11,11 @@ export interface Vehicle {
   model: string;
   year: number;
   price: number;
-  image?: string | null; 
+  image?: string | null;
   status: 'AVAILABLE' | 'SOLD' | 'PENDING';
   autoTraderListingId?: string;
   lastSyncAttempt?: string;
   syncStatus: 'PROCESSING' | 'COMPLETED' | 'FAILED';
-}
-
-export interface ValidationError {
-  field: string;
-  message: string;
-}
-
-export interface ErrorResponse {
-  timestamp: string;
-  status: number;
-  error: string;
-  message: string;
-  details?: ValidationError[];
-  path?: string;
 }
 
 @Injectable({
@@ -37,99 +24,51 @@ export interface ErrorResponse {
 export class VehicleService {
   private apiUrl = 'http://localhost:8080/api/v1/inventory-service/vehicles';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient, 
+    private errorService: ErrorService
+  ) {}
 
   getAllVehicles(): Observable<Vehicle[]> {
-    return this.http.get<Vehicle[]>(this.apiUrl).pipe(
-      retry(1), 
-      catchError(this.handleError),
-      map(vehicles => this.sortVehicles(vehicles))
-    );
+    return this.http.get<Vehicle[]>(this.apiUrl)
+      .pipe(catchError(this.errorService.handleError));
   }
 
   getVehicle(id: string): Observable<Vehicle> {
-    return this.http.get<Vehicle>(`${this.apiUrl}/${id}`).pipe(
-      catchError(this.handleError)
-    );
+    return this.http.get<Vehicle>(`${this.apiUrl}/${id}`)
+      .pipe(catchError(this.errorService.handleError));
   }
 
   createVehicle(vehicle: Partial<Vehicle>): Observable<Vehicle> {
     return this.http.post<Vehicle>(this.apiUrl, vehicle).pipe(
-      catchError(this.handleError)
+      catchError((error: HttpErrorResponse) => {
+        console.log('Raw error from API:', error);
+        console.log('Error response body:', error.error);
+        console.log('Error status:', error.status);
+        return this.errorService.handleError(error);
+      })
     );
   }
 
+
   updateVehicle(id: string, vehicle: Partial<Vehicle>): Observable<Vehicle> {
-    return this.http.put<Vehicle>(`${this.apiUrl}/${id}`, vehicle).pipe(
-      catchError(this.handleError)
-    );
+    return this.http.put<Vehicle>(`${this.apiUrl}/${id}`, vehicle)
+      .pipe(catchError(this.errorService.handleError));
   }
 
   deleteVehicle(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
-      catchError(this.handleError)
-    );
+    return this.http.delete<void>(`${this.apiUrl}/${id}`)
+      .pipe(catchError(this.errorService.handleError));
   }
 
   updateVehicleImage(id: string, formData: FormData): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${id}/image`, formData).pipe(
-      catchError(this.handleError)
-    );
+    return this.http.post<void>(`${this.apiUrl}/${id}/image`, formData)
+      .pipe(catchError(this.errorService.handleError));
   }
 
   deleteVehicleImage(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}/image`).pipe(
-      catchError(this.handleError)
-    );
-  }
-  
-
-  private handleError(error: HttpErrorResponse) {
-    let errorMessage = 'An error occurred';
-    
-    if (error.error instanceof ErrorEvent) {
-      console.error('Client error:', error.error.message);
-      errorMessage = error.error.message;
-    } else {
-      console.error(
-        `Backend returned code ${error.status}, ` +
-        `body was: ${JSON.stringify(error.error)}`
-      );
-      
-      if (error.status === 400) {
-        const backendError = error.error as ErrorResponse;
-        if (backendError.details && backendError.details.length > 0) {
-          return throwError(() => ({
-            status: error.status,
-            message: 'Validation failed',
-            validationErrors: backendError.details
-          }));
-        }
-      }
-
-      switch (error.status) {
-        case 404:
-          errorMessage = 'Resource not found';
-          break;
-        case 400:
-          errorMessage = 'Invalid request';
-          break;
-        case 403:
-          errorMessage = 'Access denied';
-          break;
-        case 500:
-          errorMessage = 'Server error';
-          break;
-        default:
-          errorMessage = 'Something went wrong';
-      }
-    }
-
-    return throwError(() => ({
-      status: error.status,
-      message: errorMessage,
-      error: error.error
-    }));
+    return this.http.delete<void>(`${this.apiUrl}/${id}/image`)
+      .pipe(catchError(this.errorService.handleError));
   }
 
   private sortVehicles(vehicles: Vehicle[]): Vehicle[] {
@@ -139,7 +78,6 @@ export class VehicleService {
         'PENDING': 1,
         'SOLD': 2
       };
-      
       return statusPriority[a.status] - statusPriority[b.status];
     });
   }

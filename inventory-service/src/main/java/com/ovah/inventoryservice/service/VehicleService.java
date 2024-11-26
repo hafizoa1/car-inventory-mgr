@@ -91,7 +91,6 @@ public class VehicleService {
             vehicleRepository.deleteById(vehicleId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            // Handle potential exceptions, such as database errors
             throw new RuntimeException("Failed to delete the vehicle due to: " + e.getMessage(), e);
         }
     }

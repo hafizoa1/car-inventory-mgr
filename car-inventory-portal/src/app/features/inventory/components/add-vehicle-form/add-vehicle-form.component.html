@@ -54,7 +54,7 @@
     <mat-form-field appearance="outline">
       <mat-label>Price</mat-label>
       <input matInput type="number" formControlName="price" required min="0">
-      <span matPrefix>$&nbsp;</span>
+      <span matPrefix>£&nbsp;</span>
       <mat-error *ngIf="vehicleForm.get('price')?.touched && vehicleForm.get('price')?.errors">
         <span *ngIf="vehicleForm.get('price')?.errors?.['required']">Price is required</span>
         <span *ngIf="vehicleForm.get('price')?.errors?.['min']">Price must be greater than 0</span>
@@ -82,7 +82,7 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button mat-button type="button" mat-dialog-close>Cancel</button>
+    <button mat-button type="button" mat-dialog-close [disabled]="isSubmitting">Cancel</button>
     <button 
       mat-raised-button 
       color="primary" 

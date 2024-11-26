@@ -13,161 +13,160 @@ import { DeleteDialogComponent } from '../delete-dialog/delete-dialog.component'
 import { EditVehicleDialogComponent } from '../edit-vehicle-dialog/edit-vehicle-dialog.component';
 
 @Component({
-  selector: 'app-inventory',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatInputModule,
-    MatDialogModule,
-    FormsModule
-  ],
-  templateUrl: './inventory.component.html',
-  styleUrls: ['./inventory.component.scss']
+ selector: 'app-inventory',
+ standalone: true,
+ imports: [
+   CommonModule,
+   MatButtonModule,
+   MatIconModule,
+   MatCardModule,
+   MatInputModule,
+   MatDialogModule,
+   FormsModule
+ ],
+ templateUrl: './inventory.component.html',
+ styleUrls: ['./inventory.component.scss']
 })
 export class InventoryComponent implements OnInit {
-  searchTerm = '';
-  selectedVehicle: Vehicle | null = null;
-  vehicles: Vehicle[] = [];
+ searchTerm = '';
+ selectedVehicle: Vehicle | null = null;
+ allVehicles: Vehicle[] = [];  // Store all vehicles
+ vehicles: Vehicle[] = [];     // Displayed/filtered vehicles
 
-  constructor(
-    private dialog: MatDialog,
-    private vehicleService: VehicleService
-  ) {}
+ constructor(
+   private dialog: MatDialog,
+   private vehicleService: VehicleService
+ ) {}
 
-  ngOnInit() {
-    this.loadVehicles();
-  }
+ ngOnInit() {
+   this.loadVehicles();
+ }
 
-  selectVehicle(vehicle: Vehicle) {
-    this.selectedVehicle = vehicle;
-  }
+ selectVehicle(vehicle: Vehicle) {
+   this.selectedVehicle = vehicle;
+ }
 
-  addNewVehicle() {
-    const dialogRef = this.dialog.open(AddVehicleFormComponent, {
-      width: '500px',
-      disableClose: true
-    });
-    
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.loadVehicles();
-      }
-    });
-  }
+ addNewVehicle() {
+   const dialogRef = this.dialog.open(AddVehicleFormComponent, {
+     width: '500px',
+     disableClose: true
+   });
+   
+   dialogRef.afterClosed().subscribe(result => {
+     if (result) {
+       this.loadVehicles();
+     }
+   });
+ }
 
-  loadVehicles() {
-    this.vehicleService.getAllVehicles().subscribe({
-      next: (vehicles) => {
-        this.vehicles = vehicles;
-      },
-      error: (error) => {
-        console.error('Error loading vehicles:', error);
-      }
-    });
-  }
+ loadVehicles() {
+   this.vehicleService.getAllVehicles().subscribe({
+     next: (vehicles) => {
+       this.allVehicles = vehicles;  // Store all vehicles
+       this.vehicles = vehicles;     // Initialize displayed vehicles
+     },
+     error: (error) => {
+       console.error('Error loading vehicles:', error);
+     }
+   });
+ }
 
-  searchVehicles(): void {
-    const term = this.searchTerm.toLowerCase().trim();
-    if (!term) {
-      this.loadVehicles();
-      return;
-    }
-    
-    this.vehicles = this.vehicles.filter(vehicle => 
-      vehicle.make.toLowerCase().includes(term) ||
-      vehicle.model.toLowerCase().includes(term) ||
-      vehicle.year.toString().includes(term) ||
-      vehicle.vin.toLowerCase().includes(term)
-    );
-  }
+ searchVehicles(): void {
+   const term = this.searchTerm.toLowerCase().trim();
+   if (!term) {
+     this.vehicles = [...this.allVehicles];  // Reset to all vehicles
+     return;
+   }
+   
+   this.vehicles = this.allVehicles.filter(vehicle => 
+     vehicle.make.toLowerCase().includes(term) ||
+     vehicle.model.toLowerCase().includes(term) ||
+     vehicle.year.toString().includes(term) ||
+     vehicle.vin.toLowerCase().includes(term)
+   );
+ }
 
-  resetSearch() {
-    this.searchTerm = '';
-    this.loadVehicles();
-  }
+ resetSearch() {
+   this.searchTerm = '';
+   this.vehicles = [...this.allVehicles];  // Reset to all vehicles
+ }
 
-  deleteVehicle() {
-    const vehicleId = this.selectedVehicle?.id;
-    if (!vehicleId) {
-      console.error('Vehicle has no ID');
-      return;
-    }
-  
-    const dialogRef = this.dialog.open(DeleteDialogComponent);
-  
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.vehicleService.deleteVehicle(vehicleId).subscribe({
-          next: () => {
-            this.vehicles = this.vehicles.filter(v => v.id !== vehicleId);
-            this.selectedVehicle = null;
-          },
-          error: (error) => console.error('Error deleting vehicle:', error)
-        });
-      }
-    });
-  }
-
-  editVehicle() {
-    if (!this.selectedVehicle?.id) {
-      return;
-    }
+ deleteVehicle() {
+   const vehicleId = this.selectedVehicle?.id;
+   if (!vehicleId) {
+     console.error('Vehicle has no ID');
+     return;
+   }
  
-    const vehicleId = this.selectedVehicle.id;
+   const dialogRef = this.dialog.open(DeleteDialogComponent);
  
-    const dialogRef = this.dialog.open(EditVehicleDialogComponent, {
-      width: '500px',
-      data: this.selectedVehicle,
-      disableClose: true
-    });
- 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Handle image deletion first
-        if (result.imageAction === 'delete') {
-          this.vehicleService.deleteVehicleImage(vehicleId).subscribe({
-            next: () => {
-              console.log('Image deleted successfully');
-              this.loadVehicles();  // Refresh data
-            },
-            error: (err) => console.error('Error deleting image:', err)
-          });
-          return;  // Exit here to avoid vehicle update
-        }
+   dialogRef.afterClosed().subscribe(result => {
+     if (result) {
+       this.vehicleService.deleteVehicle(vehicleId).subscribe({
+         next: () => {
+           this.vehicles = this.vehicles.filter(v => v.id !== vehicleId);
+           this.selectedVehicle = null;
+         },
+         error: (error) => console.error('Error deleting vehicle:', error)
+       });
+     }
+   });
+ }
 
-        // Handle regular vehicle update
-        this.vehicleService.updateVehicle(vehicleId, result.vehicleData).subscribe({
-          next: (updatedVehicle) => {
-            this.vehicles = this.vehicles.map(v =>
-              v.id === updatedVehicle.id ? updatedVehicle : v
-            );
-            this.selectedVehicle = updatedVehicle;
- 
-            // Handle image upload if needed
-            if (result.imageAction === 'update' && result.imageFile) {
-              const formData = new FormData();
-              formData.append('file', result.imageFile);
-             
-              this.vehicleService.updateVehicleImage(vehicleId, formData).subscribe({
-                next: () => {
-                  console.log('Image uploaded successfully');
-                  this.loadVehicles();
-                },
-                error: (err) => console.error('Error uploading image:', err)
-              });
-            }
-          },
-          error: (error) => {
-            console.error('Error updating vehicle:', error);
-            if (error.validationErrors) {
-              console.log('Validation errors:', error.validationErrors);
-            }
-          }
-        });
-      }
-    });
-  }
+ editVehicle() {
+   if (!this.selectedVehicle?.id) {
+     return;
+   }
+
+   const vehicleId = this.selectedVehicle.id;
+
+   const dialogRef = this.dialog.open(EditVehicleDialogComponent, {
+     width: '500px',
+     data: this.selectedVehicle,
+     disableClose: true
+   });
+
+   dialogRef.afterClosed().subscribe(result => {
+     if (result) {
+       if (result.imageAction === 'delete') {
+         this.vehicleService.deleteVehicleImage(vehicleId).subscribe({
+           next: () => {
+             console.log('Image deleted successfully');
+             this.loadVehicles(); 
+           },
+           error: (err) => console.error('Error deleting image:', err)
+         });
+         return; 
+       }
+
+       this.vehicleService.updateVehicle(vehicleId, result.vehicleData).subscribe({
+         next: (updatedVehicle) => {
+           this.vehicles = this.vehicles.map(v =>
+             v.id === updatedVehicle.id ? updatedVehicle : v
+           );
+           this.selectedVehicle = updatedVehicle;
+
+           if (result.imageAction === 'update' && result.imageFile) {
+             const formData = new FormData();
+             formData.append('file', result.imageFile);
+            
+             this.vehicleService.updateVehicleImage(vehicleId, formData).subscribe({
+               next: () => {
+                 console.log('Image uploaded successfully');
+                 this.loadVehicles();
+               },
+               error: (err) => console.error('Error uploading image:', err)
+             });
+           }
+         },
+         error: (error) => {
+           console.error('Error updating vehicle:', error);
+           if (error.validationErrors) {
+             console.log('Validation errors:', error.validationErrors);
+           }
+         }
+       });
+     }
+   });
+ }
 }
