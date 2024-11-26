@@ -29,13 +29,14 @@ import { finalize } from 'rxjs/operators';
     MatIconModule
   ],
   templateUrl: './edit-vehicle-dialog.component.html',
-  styleUrl: './edit-vehicle-dialog.component.scss'
+  styleUrls: ['./edit-vehicle-dialog.component.scss']
 })
 export class EditVehicleDialogComponent {
   vehicleForm: FormGroup;
   isSubmitting = false;
   serverErrors: { [key: string]: string } = {};
   currentImage: string | null = null;
+  selectedFile: File | null = null; // To store the selected image file
 
   constructor(
     private fb: FormBuilder,
@@ -53,68 +54,27 @@ export class EditVehicleDialogComponent {
       status: [data.status, [Validators.required]],
       syncStatus: [data.syncStatus]
     });
-    
+
     this.currentImage = data.image || null;
   }
 
   onFileSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
-      const formData = new FormData();
-      formData.append('image', file);
-      
-      this.vehicleService.updateVehicleImage(this.data.id!, formData)
-        .subscribe({
-          next: () => {
-            // Handle image update success
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              this.currentImage = e.target?.result as string;
-            };
-            reader.readAsDataURL(file);
-            
-            this.snackBar.open('Image successfully updated!', 'Close', {
-              duration: 3000,
-              horizontalPosition: 'right',
-              verticalPosition: 'top',
-              panelClass: ['success-snackbar']
-            });
-          },
-          error: (error: ErrorReturn) => {
-            this.snackBar.open('Failed to update image', 'Close', {
-              duration: 5000,
-              horizontalPosition: 'right',
-              verticalPosition: 'top',
-              panelClass: ['error-snackbar']
-            });
-          }
-        });
+      this.selectedFile = file; // Store the selected file
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.currentImage = e.target?.result as string; // Preview the image
+      };
+      reader.readAsDataURL(file);
     }
   }
 
-  removeImage() {
-    if (this.data.id) {
-      this.vehicleService.deleteVehicleImage(this.data.id)
-        .subscribe({
-          next: () => {
-            this.currentImage = null;
-            this.snackBar.open('Image successfully removed!', 'Close', {
-              duration: 3000,
-              horizontalPosition: 'right',
-              verticalPosition: 'top',
-              panelClass: ['success-snackbar']
-            });
-          },
-          error: (error: ErrorReturn) => {
-            this.snackBar.open('Failed to remove image', 'Close', {
-              duration: 5000,
-              horizontalPosition: 'right',
-              verticalPosition: 'top',
-              panelClass: ['error-snackbar']
-            });
-          }
-        });
-    }
+  // Renamed to avoid conflict with the private removeImage method
+  onRemoveImageClick() {
+    this.currentImage = null;
+    this.selectedFile = null;
+    // Mark the image for removal during submission
   }
 
   private handleValidationErrors(validationErrors: ValidationError[]) {
@@ -156,7 +116,14 @@ export class EditVehicleDialogComponent {
       this.isSubmitting = true;
       this.clearServerErrors();
 
-      this.vehicleService.updateVehicle(this.data.id!, this.vehicleForm.value)
+      // Prepare updated vehicle data
+      const updatedVehicle: Vehicle = {
+        ...this.data,
+        ...this.vehicleForm.value
+      };
+
+      // Update the vehicle data on the server
+      this.vehicleService.updateVehicle(this.data.id!, updatedVehicle)
         .pipe(
           finalize(() => {
             this.isSubmitting = false;
@@ -171,21 +138,30 @@ export class EditVehicleDialogComponent {
               verticalPosition: 'top',
               panelClass: ['success-snackbar']
             });
-            this.dialogRef.close(response);
+
+            // Handle image upload or removal
+            if (this.selectedFile) {
+              this.uploadImage(response.id!);
+            } else if (this.currentImage === null && this.data.image) {
+              this.removeImage(response.id!);
+            } else {
+              // If no image changes, simply close the dialog
+              this.dialogRef.close(response);
+            }
           },
           error: (errorReturn: ErrorReturn) => {
             console.log('Component received error:', errorReturn);
-            
+
             if (errorReturn.validationErrors) {
               this.handleValidationErrors(errorReturn.validationErrors);
             }
-            
+
             if (errorReturn.errors && errorReturn.errors.length > 0) {
               const errorParts = errorReturn.errors[0].split(':');
-              const errorMessage = errorParts.length > 1 
-                ? errorParts[1].trim() 
+              const errorMessage = errorParts.length > 1
+                ? errorParts[1].trim()
                 : errorReturn.errors[0];
-                
+
               this.snackBar.open(`Validation Error: ${errorMessage}`, 'Close', {
                 duration: 5000,
                 horizontalPosition: 'right',
@@ -211,5 +187,58 @@ export class EditVehicleDialogComponent {
         panelClass: ['error-snackbar']
       });
     }
+  }
+
+  private uploadImage(vehicleId: string) {
+    if (this.selectedFile) {
+      const formData = new FormData();
+      formData.append('file', this.selectedFile);
+
+      this.vehicleService.updateVehicleImage(vehicleId, formData)
+        .subscribe({
+          next: () => {
+            this.snackBar.open('Image successfully updated!', 'Close', {
+              duration: 3000,
+              horizontalPosition: 'right',
+              verticalPosition: 'top',
+              panelClass: ['success-snackbar']
+            });
+            this.dialogRef.close({ ...this.data, ...this.vehicleForm.value, image: this.currentImage });
+          },
+          error: (error: ErrorReturn) => {
+            this.snackBar.open('Failed to update image', 'Close', {
+              duration: 5000,
+              horizontalPosition: 'right',
+              verticalPosition: 'top',
+              panelClass: ['error-snackbar']
+            });
+            console.error('Image upload error:', error);
+          }
+        });
+    }
+  }
+
+  private removeImage(vehicleId: string) {
+    this.vehicleService.deleteVehicleImage(vehicleId)
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Image successfully removed!', 'Close', {
+            duration: 3000,
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+            panelClass: ['success-snackbar']
+          });
+          this.dialogRef.close({ ...this.data, ...this.vehicleForm.value, image: null });
+        },
+        error: (error: ErrorReturn) => {
+          this.snackBar.open('Failed to remove image', 'Close', {
+            duration: 5000,
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+            panelClass: ['error-snackbar']
+          });
+          console.error('Image removal error:', error);
+        }
+      });
   }
 }

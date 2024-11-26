@@ -24,7 +24,7 @@
           mat-icon-button
           type="button"
           color="warn"
-          (click)="removeImage()">
+          (click)="onRemoveImageClick()">
           <mat-icon>delete</mat-icon>
         </button>
       </div>
@@ -37,7 +37,7 @@
       <mat-error *ngIf="vehicleForm.get('make')?.touched && vehicleForm.get('make')?.errors">
         <span *ngIf="vehicleForm.get('make')?.errors?.['required']">Make is required</span>
         <span *ngIf="vehicleForm.get('make')?.errors?.['serverError']">
-          {{vehicleForm.get('make')?.errors?.['serverError']}}
+          {{ vehicleForm.get('make')?.errors?.['serverError'] }}
         </span>
       </mat-error>
     </mat-form-field>
@@ -49,7 +49,7 @@
       <mat-error *ngIf="vehicleForm.get('model')?.touched && vehicleForm.get('model')?.errors">
         <span *ngIf="vehicleForm.get('model')?.errors?.['required']">Model is required</span>
         <span *ngIf="vehicleForm.get('model')?.errors?.['serverError']">
-          {{vehicleForm.get('model')?.errors?.['serverError']}}
+          {{ vehicleForm.get('model')?.errors?.['serverError'] }}
         </span>
       </mat-error>
     </mat-form-field>
@@ -62,7 +62,7 @@
         <span *ngIf="vehicleForm.get('year')?.errors?.['required']">Year is required</span>
         <span *ngIf="vehicleForm.get('year')?.errors?.['min']">Year must be 1900 or later</span>
         <span *ngIf="vehicleForm.get('year')?.errors?.['serverError']">
-          {{vehicleForm.get('year')?.errors?.['serverError']}}
+          {{ vehicleForm.get('year')?.errors?.['serverError'] }}
         </span>
       </mat-error>
     </mat-form-field>
@@ -74,7 +74,7 @@
       <mat-error *ngIf="vehicleForm.get('vin')?.touched && vehicleForm.get('vin')?.errors">
         <span *ngIf="vehicleForm.get('vin')?.errors?.['required']">VIN is required</span>
         <span *ngIf="vehicleForm.get('vin')?.errors?.['serverError']">
-          {{vehicleForm.get('vin')?.errors?.['serverError']}}
+          {{ vehicleForm.get('vin')?.errors?.['serverError'] }}
         </span>
       </mat-error>
     </mat-form-field>
@@ -82,13 +82,13 @@
     <!-- Price Field -->
     <mat-form-field appearance="outline">
       <mat-label>Price</mat-label>
-      <input matInput type="number" formControlName="price" required min="0">
       <span matPrefix>£&nbsp;</span>
+      <input matInput type="number" formControlName="price" required min="0">
       <mat-error *ngIf="vehicleForm.get('price')?.touched && vehicleForm.get('price')?.errors">
         <span *ngIf="vehicleForm.get('price')?.errors?.['required']">Price is required</span>
         <span *ngIf="vehicleForm.get('price')?.errors?.['min']">Price must be greater than 0</span>
         <span *ngIf="vehicleForm.get('price')?.errors?.['serverError']">
-          {{vehicleForm.get('price')?.errors?.['serverError']}}
+          {{ vehicleForm.get('price')?.errors?.['serverError'] }}
         </span>
       </mat-error>
     </mat-form-field>
@@ -104,7 +104,7 @@
       <mat-error *ngIf="vehicleForm.get('status')?.touched && vehicleForm.get('status')?.errors">
         <span *ngIf="vehicleForm.get('status')?.errors?.['required']">Status is required</span>
         <span *ngIf="vehicleForm.get('status')?.errors?.['serverError']">
-          {{vehicleForm.get('status')?.errors?.['serverError']}}
+          {{ vehicleForm.get('status')?.errors?.['serverError'] }}
         </span>
       </mat-error>
     </mat-form-field>
