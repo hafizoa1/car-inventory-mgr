@@ -1,0 +1,75 @@
+name: Continuous Integration for Angular and Backend
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - prod
+  pull_request:
+    branches:
+      - main
+      - dev
+      - prod
+
+jobs:
+  frontend-build-and-test:
+    runs-on: ubuntu-latest
+    name: Build and Test Frontend (Angular)
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'  # Ensure Node.js 18 is used
+
+    - name: Install Angular CLI
+      run: npm install -g @angular/cli
+
+    - name: Install frontend dependencies
+      run: npm install
+      working-directory: ./car-inventory-portal
+
+    - name: Run frontend tests
+      run: ng test --watch=false
+      working-directory: ./car-inventory-portal
+
+    - name: Build frontend
+      run: ng build --configuration production
+      working-directory: ./car-inventory-portal
+
+  backend-build-and-test:
+    runs-on: ubuntu-latest
+    name: Build and Test Backend (Java Services)
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up Java
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+
+    - name: Build and Test Inventory Service
+      run: |
+        cd inventory-service
+        ./gradlew clean build
+
+    - name: Build and Test User Auth Service
+      run: |
+        cd user-auth-service
+        ./gradlew clean build
+
+    - name: Build and Test API Gateway
+      run: |
+        cd api-gateway
+        ./gradlew clean build
+
+    - name: Build and Test Advertisement Service
+      run: |
+        cd advertisement-service
+        ./gradlew clean build
