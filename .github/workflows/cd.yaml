@@ -22,17 +22,22 @@ jobs:
         chmod +x inventory-service/gradlew
         cd inventory-service && ./gradlew clean build --no-daemon
     
-    # Frontend Setup & Build
+    # Improved Frontend Setup & Build
     - uses: actions/setup-node@v3
       with:
         node-version: '18'
         cache: 'npm'
+        cache-dependency-path: 'car-inventory-portal/package-lock.json'
+    
+    - name: Install Frontend Dependencies
+      working-directory: ./car-inventory-portal
+      run: |
+        npm clean-install   # Uses package-lock.json exactly as-is
+        npm ci              # Faster alternative to 'npm install'
     
     - name: Build Frontend
       working-directory: ./car-inventory-portal
-      run: |
-        npm ci
-        npm run build
+      run: npm run build
     
     - name: Deploy
       run: |
