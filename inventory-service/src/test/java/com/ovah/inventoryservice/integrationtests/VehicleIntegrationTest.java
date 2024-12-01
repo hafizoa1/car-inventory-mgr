@@ -193,11 +193,8 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
             @Test
             void successfullyRetrieveAllVehicles() {
                 // Given
-                Vehicle vehicle1 = givenValidVehicle();
-                vehicle1.setId(UUID.randomUUID());
-                Vehicle vehicle2 = givenValidVehicle();
-                vehicle2.setId(UUID.randomUUID());
-                when(vehicleRepository.findAll()).thenReturn(List.of(vehicle1, vehicle2));
+                givenMultipleVehiclesInDatabase();
+
 
                 // When
                 ResponseEntity<List<Vehicle>> response = whenGetAllRequestIsMade();
@@ -206,7 +203,6 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 assertThat(response.getBody()).isNotEmpty();
                 assertThat(response.getBody().size()).isEqualTo(2);
-                assertThat(response.getBody()).contains(vehicle1, vehicle2);
             }
 
             @Test

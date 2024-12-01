@@ -67,6 +67,24 @@ public abstract class VehicleTestHelper extends BaseIntegrationTest {
                 .build();
     }
 
+    public Vehicle givenValidVehicle2() {
+        return Vehicle.builder()
+                .make("Honda")
+                .model("Accord")
+                .year(2023)
+                .vin("1HGCM82633A123472")
+                .status(AVAILABLE)
+                .price(BigDecimal.valueOf(30000.00))
+                .build();
+    }
+
+    public List<Vehicle> givenMultipleVehiclesInDatabase() {
+        vehicleRepository.save(givenValidVehicle());
+        vehicleRepository.save(givenValidVehicle2());
+
+        return vehicleRepository.findAll();
+    }
+
 
     protected Vehicle givenExistingVehicle() {
         Vehicle vehicle = givenValidVehicle();
