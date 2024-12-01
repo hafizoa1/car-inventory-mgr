@@ -19,10 +19,8 @@ jobs:
     
     - name: Build Backend
       run: |
-        chmod +x */gradlew
-        for service in inventory-service user-auth-service api-gateway advertisement-service; do
-          cd $service && ./gradlew clean build --no-daemon && cd ..
-        done
+        chmod +x inventory-service/gradlew
+        cd inventory-service && ./gradlew clean build --no-daemon
     
     # Frontend Setup & Build
     - uses: actions/setup-node@v3
@@ -39,9 +37,9 @@ jobs:
     - name: Deploy
       run: |
         if [[ $GITHUB_REF == 'refs/heads/prod' ]]; then
-          echo "Deploying to production..."
-          # Add production deployment commands
+          echo "Deploying to production environment..."
+        elif [[ $GITHUB_REF == 'refs/heads/main' ]]; then
+          echo "Deploying to staging environment..."
         elif [[ $GITHUB_REF == 'refs/heads/dev' ]]; then
-          echo "Deploying to staging..."
-          # Add staging deployment commands
+          echo "Deploying to development environment..."
         fi
