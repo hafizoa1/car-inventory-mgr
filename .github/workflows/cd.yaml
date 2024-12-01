@@ -1,64 +1,47 @@
 name: Continuous Deployment
-
 on:
   push:
-    branches:
-      - main
-      - prod
-      - dev
+    branches: [main, prod, dev]
 
 jobs:
-  deploy-backend:
+  deploy:
     runs-on: ubuntu-latest
-    name: Deploy Backend Services (Java)
-
+    name: Build and Deploy
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
-
-    - name: Set up Java
-      uses: actions/setup-java@v2
+    - uses: actions/checkout@v3
+    
+    # Backend Setup & Build
+    - uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
-
-    - name: Build Backend Services
+        cache: 'gradle'
+    
+    - name: Build Backend
       run: |
-        cd inventory-service && ./gradlew clean build
-        cd ../user-auth-service && ./gradlew clean build
-        cd ../api-gateway && ./gradlew clean build
-        cd ../advertisement-service && ./gradlew clean build
-
-    - name: Deploy Backend to Production
-      if: github.ref == 'refs/heads/prod'
-      run: echo "Deploying backend to production..."
-
-    - name: Deploy Backend to Staging
-      if: github.ref == 'refs/heads/dev'
-      run: echo "Deploying backend to staging..."
-
-  deploy-frontend:
-    needs: deploy-backend  # Ensure backend deployment completes first
-    runs-on: ubuntu-latest
-    name: Deploy Frontend (Angular)
-
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v2
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
+        chmod +x */gradlew
+        for service in inventory-service user-auth-service api-gateway advertisement-service; do
+          cd $service && ./gradlew clean build --no-daemon && cd ..
+        done
+    
+    # Frontend Setup & Build
+    - uses: actions/setup-node@v3
       with:
-        node-version: '14'
-
+        node-version: '18'
+        cache: 'npm'
+    
     - name: Build Frontend
-      run: npm run build
       working-directory: ./car-inventory-portal
-
-    - name: Deploy Frontend to Production
-      if: github.ref == 'refs/heads/prod'
-      run: echo "Deploying frontend to production..."
-
-    - name: Deploy Frontend to Staging
-      if: github.ref == 'refs/heads/dev'
-      run: echo "Deploying frontend to staging..."
+      run: |
+        npm ci
+        npm run build
+    
+    - name: Deploy
+      run: |
+        if [[ $GITHUB_REF == 'refs/heads/prod' ]]; then
+          echo "Deploying to production..."
+          # Add production deployment commands
+        elif [[ $GITHUB_REF == 'refs/heads/dev' ]]; then
+          echo "Deploying to staging..."
+          # Add staging deployment commands
+        fi
