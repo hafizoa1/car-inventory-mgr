@@ -1,16 +1,11 @@
-# Root level .gitignore for monorepo
-
-# Node
-**/node_modules/
-**/node_modules/**
-node_modules
-npm-debug.log
-yarn-debug.log*
-yarn-error.log*
-.npm
-.yarn-integrity
-package-lock.json
-yarn.lock
+# Node - Root level only
+/node_modules
+/npm-debug.log
+/yarn-debug.log
+/yarn-error.log
+/.npm
+/.yarn-integrity
+/yarn.lock
 
 # IDEs and editors
 .idea/
