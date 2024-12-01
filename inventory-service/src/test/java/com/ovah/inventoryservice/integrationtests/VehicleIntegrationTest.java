@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -208,7 +207,6 @@ public class VehicleIntegrationTest extends VehicleTestHelper {
             @Test
             void retrieveNoVehiclesReturnsNoContent() {
                 // Given no vehicles are available
-                when(vehicleRepository.findAll()).thenReturn(Collections.emptyList());
 
                 // When
                 ResponseEntity<List<Vehicle>> response = whenGetAllRequestIsMade();
