@@ -2,36 +2,40 @@ package com.ovah.userauthservice.controller;
 
 import com.ovah.userauthservice.model.User;
 import com.ovah.userauthservice.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping("api/v1/userController")
+import java.util.UUID;
+
+@Controller
+@AllArgsConstructor
+@RequestMapping("/api/v1/users")
 public class UserController {
 
-    @Autowired
-    UserService userService;
+    private final UserService userService;
 
-
-    @GetMapping()
-    public ResponseEntity<User> getUser() {
-        User user = new User();
-        return null;
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUser(UUID id){
+        return userService.getUser(id);
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public User createUsers(){
         return null;
     }
+
 
     @PutMapping
-    public ResponseEntity<User> updateUser(@RequestBody User user) {
+    public User editUser(){
         return null;
     }
 
+
     @DeleteMapping
-    public ResponseEntity<User> deleteUser(@RequestBody User user) {
+    public User deleteUsers(){
         return null;
     }
+
 }

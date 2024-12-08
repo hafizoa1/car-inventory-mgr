@@ -62,7 +62,6 @@ public class VehicleService {
         vehicleUpdateValidator.validate(updateRequest);
         return vehicleRepository.findById(id)
                 .map(existingVehicle -> {
-                    // Update mutable fields only
                     existingVehicle.setVin(updateRequest.getVin());
                     existingVehicle.setMake(updateRequest.getMake());
                     existingVehicle.setModel(updateRequest.getModel());
